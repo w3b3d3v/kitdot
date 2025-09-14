@@ -1,10 +1,10 @@
 {
-  "name": "kit-dot",
+  "name": "kitdot",
   "version": "0.1.0",
   "description": "A TypeScript SDK toolkit for building Dapps on Polkadot Cloud",
   "main": "dist/index.js",
   "bin": {
-    "kit-dot": "dist/cli.js"
+    "kitdot": "dist/cli.js"
   },
   "type": "module",
   "scripts": {

@@ -1,11 +1,17 @@
-import fs from 'fs-extra';
-import path from 'path';
-import degit from 'degit';
-import ora, { Ora } from 'ora';
-import chalk from 'chalk';
-import inquirer from 'inquirer';
-import { spawn } from 'child_process';
-import { TemplateDefinition, TemplateSource, ProjectConfig, TemplateCommand, NextStepInstruction } from '../types.js';
+import fs from "fs-extra";
+import path from "path";
+import degit from "degit";
+import ora, { Ora } from "ora";
+import chalk from "chalk";
+import inquirer from "inquirer";
+import { spawn } from "child_process";
+import {
+  TemplateDefinition,
+  TemplateSource,
+  ProjectConfig,
+  TemplateCommand,
+  NextStepInstruction,
+} from "../types.js";
 
 /**
  * Template Loader - Handles loading templates from local and remote sources
@@ -15,7 +21,7 @@ export class TemplateLoader {
 
   constructor() {
     // Create temporary directory for remote template downloads
-    this.tempDir = path.join(process.cwd(), '.kit-dot-cache');
+    this.tempDir = path.join(process.cwd(), ".kitdot-cache");
   }
 
   /**
@@ -31,7 +37,7 @@ export class TemplateLoader {
     try {
       let templatePath: string;
 
-      if (template.source.type === 'local') {
+      if (template.source.type === "local") {
         templatePath = await this.loadLocalTemplate(template.source);
       } else {
         templatePath = await this.loadRemoteTemplate(template.source, spinner);
@@ -43,8 +49,13 @@ export class TemplateLoader {
       spinner.succeed(`${template.name} template loaded successfully`);
 
       // Prompt user for optional setup commands if specified
-      if (template.optionalSetup && template.optionalSetup.commands.length > 0) {
-        const shouldRunOptionalSetup = await this.promptUserForOptionalSetup(template);
+      if (
+        template.optionalSetup &&
+        template.optionalSetup.commands.length > 0
+      ) {
+        const shouldRunOptionalSetup = await this.promptUserForOptionalSetup(
+          template
+        );
         if (shouldRunOptionalSetup) {
           await this.executeOptionalSetupWithProgress(template, targetDir);
         }
@@ -54,7 +65,6 @@ export class TemplateLoader {
       if (template.nextSteps) {
         this.displayNextSteps(template, targetDir);
       }
-
     } catch (error) {
       spinner.fail(`Failed to load ${template.name} template`);
       throw error;
@@ -66,7 +76,7 @@ export class TemplateLoader {
    */
   private async loadLocalTemplate(source: TemplateSource): Promise<string> {
     const templatePath = path.join(process.cwd(), source.localPath!);
-    
+
     if (!(await fs.pathExists(templatePath))) {
       throw new Error(`Local template not found at ${templatePath}`);
     }
@@ -78,7 +88,7 @@ export class TemplateLoader {
    * Load remote template using degit
    */
   private async loadRemoteTemplate(
-    source: TemplateSource, 
+    source: TemplateSource,
     spinner: Ora
   ): Promise<string> {
     // Ensure temp directory exists
@@ -86,12 +96,12 @@ export class TemplateLoader {
 
     // Build degit source string
     let degitSource = source.repository!;
-    
+
     if (source.directory) {
       degitSource += `/${source.directory}`;
     }
-    
-    if (source.branch && source.branch !== 'main') {
+
+    if (source.branch && source.branch !== "main") {
       degitSource += `#${source.branch}`;
     }
 
@@ -101,18 +111,21 @@ export class TemplateLoader {
     const tempTemplatePath = path.join(this.tempDir, `template-${Date.now()}`);
 
     try {
-      const emitter = degit(degitSource, { 
-        cache: true, 
+      const emitter = degit(degitSource, {
+        cache: true,
         force: true,
-        verbose: false 
+        verbose: false,
       });
 
       await emitter.clone(tempTemplatePath);
-      
+
       return tempTemplatePath;
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : String(error);
-      throw new Error(`Failed to download template from ${source.repository}: ${errorMessage}`);
+      const errorMessage =
+        error instanceof Error ? error.message : String(error);
+      throw new Error(
+        `Failed to download template from ${source.repository}: ${errorMessage}`
+      );
     }
   }
 
@@ -120,8 +133,8 @@ export class TemplateLoader {
    * Copy template files to target directory
    */
   private async copyTemplate(
-    sourcePath: string, 
-    targetPath: string, 
+    sourcePath: string,
+    targetPath: string,
     _config: ProjectConfig
   ): Promise<void> {
     await fs.copy(sourcePath, targetPath, {
@@ -129,46 +142,61 @@ export class TemplateLoader {
         const basename = path.basename(src);
         // Exclude common directories/files that shouldn't be copied
         return ![
-          'node_modules', 
-          '.git', 
-          'dist', 
-          '.DS_Store', 
-          'tsconfig.tsbuildinfo', 
-          'package-lock.json',
-          '.next',
-          '.nuxt',
-          '.svelte-kit',
-          'build'
+          "node_modules",
+          ".git",
+          "dist",
+          ".DS_Store",
+          "tsconfig.tsbuildinfo",
+          "package-lock.json",
+          ".next",
+          ".nuxt",
+          ".svelte-kit",
+          "build",
         ].includes(basename);
-      }
+      },
     });
   }
 
   /**
    * Prompt user for consent to run optional setup commands
    */
-  private async promptUserForOptionalSetup(template: TemplateDefinition): Promise<boolean> {
+  private async promptUserForOptionalSetup(
+    template: TemplateDefinition
+  ): Promise<boolean> {
     const { optionalSetup } = template;
     if (!optionalSetup) return false;
 
-    console.log(chalk.blue('\n🔧 Optional Setup Available'));
-    console.log(chalk.gray(optionalSetup.description || 'Additional setup commands are available for this template.'));
-    
-    console.log('\nCommands that will be executed:');
-    optionalSetup.commands.forEach((command: TemplateCommand, index: number) => {
-      const workingDir = command.workingDirectory ? ` (in ${command.workingDirectory})` : '';
-      console.log(chalk.yellow(`  ${index + 1}. ${command.command}${workingDir}`));
-      if (command.description) {
-        console.log(chalk.gray(`     ${command.description}`));
-      }
-    });
+    console.log(chalk.blue("\n🔧 Optional Setup Available"));
+    console.log(
+      chalk.gray(
+        optionalSetup.description ||
+          "Additional setup commands are available for this template."
+      )
+    );
 
-    const answer = await inquirer.prompt([{
-      type: 'confirm',
-      name: 'proceed',
-      message: 'Would you like to run these optional setup commands now?',
-      default: true
-    }]);
+    console.log("\nCommands that will be executed:");
+    optionalSetup.commands.forEach(
+      (command: TemplateCommand, index: number) => {
+        const workingDir = command.workingDirectory
+          ? ` (in ${command.workingDirectory})`
+          : "";
+        console.log(
+          chalk.yellow(`  ${index + 1}. ${command.command}${workingDir}`)
+        );
+        if (command.description) {
+          console.log(chalk.gray(`     ${command.description}`));
+        }
+      }
+    );
+
+    const answer = await inquirer.prompt([
+      {
+        type: "confirm",
+        name: "proceed",
+        message: "Would you like to run these optional setup commands now?",
+        default: true,
+      },
+    ]);
 
     return answer.proceed;
   }
@@ -183,67 +211,89 @@ export class TemplateLoader {
     const { optionalSetup } = template;
     if (!optionalSetup) return;
 
-    console.log(chalk.blue(`\n🚀 Running optional setup for ${template.name}...`));
+    console.log(
+      chalk.blue(`\n🚀 Running optional setup for ${template.name}...`)
+    );
 
     for (const [index, command] of optionalSetup.commands.entries()) {
       try {
-        console.log(chalk.blue(`\n[${index + 1}/${optionalSetup.commands.length}] ${command.description || command.command}`));
+        console.log(
+          chalk.blue(
+            `\n[${index + 1}/${optionalSetup.commands.length}] ${
+              command.description || command.command
+            }`
+          )
+        );
         console.log(chalk.gray(`Command: ${command.command}`));
-        
-        const workingDir = command.workingDirectory 
+
+        const workingDir = command.workingDirectory
           ? path.join(targetDir, command.workingDirectory)
           : targetDir;
-        
+
         console.log(chalk.gray(`Working directory: ${workingDir}`));
-        console.log(chalk.gray('Output:'));
+        console.log(chalk.gray("Output:"));
 
         await this.executeCommandWithStreaming(command, targetDir);
         console.log(chalk.green(`✅ Command completed successfully\n`));
-
       } catch (error) {
-        const errorMessage = error instanceof Error ? error.message : String(error);
+        const errorMessage =
+          error instanceof Error ? error.message : String(error);
         console.log(chalk.red(`❌ Command failed: ${errorMessage}\n`));
-        throw new Error(`Optional setup command failed: ${command.command} - ${errorMessage}`);
+        throw new Error(
+          `Optional setup command failed: ${command.command} - ${errorMessage}`
+        );
       }
     }
 
-    console.log(chalk.green(`🎉 Optional setup completed for ${template.name}!`));
+    console.log(
+      chalk.green(`🎉 Optional setup completed for ${template.name}!`)
+    );
   }
 
   /**
    * Display next steps guidance from template configuration
    */
-  private displayNextSteps(template: TemplateDefinition, _targetDir: string): void {
+  private displayNextSteps(
+    template: TemplateDefinition,
+    _targetDir: string
+  ): void {
     const { nextSteps } = template;
     if (!nextSteps) return;
 
     console.log(chalk.blue(`\n📋 ${nextSteps.title}`));
-    console.log(chalk.gray('Follow these steps to get started:\n'));
+    console.log(chalk.gray("Follow these steps to get started:\n"));
 
-    nextSteps.instructions.forEach((instruction: NextStepInstruction, index: number) => {
-      console.log(chalk.blue(`${index + 1}. ${instruction.title}`));
-      console.log(chalk.gray(`   ${instruction.description}`));
-      
-      instruction.commands.forEach((cmd: string) => {
-        const workingDir = instruction.workingDirectory 
-          ? ` (run in ${instruction.workingDirectory})` 
-          : '';
-        console.log(chalk.yellow(`   ${cmd}${workingDir}`));
-      });
-      console.log(''); // Empty line between steps
-    });
+    nextSteps.instructions.forEach(
+      (instruction: NextStepInstruction, index: number) => {
+        console.log(chalk.blue(`${index + 1}. ${instruction.title}`));
+        console.log(chalk.gray(`   ${instruction.description}`));
+
+        instruction.commands.forEach((cmd: string) => {
+          const workingDir = instruction.workingDirectory
+            ? ` (run in ${instruction.workingDirectory})`
+            : "";
+          console.log(chalk.yellow(`   ${cmd}${workingDir}`));
+        });
+        console.log(""); // Empty line between steps
+      }
+    );
 
     if (nextSteps.documentationUrl) {
-      console.log(chalk.cyan(`📚 Documentation: ${nextSteps.documentationUrl}`));
+      console.log(
+        chalk.cyan(`📚 Documentation: ${nextSteps.documentationUrl}`)
+      );
     }
   }
 
   /**
    * Execute a single template command with real-time output streaming
    */
-  private async executeCommandWithStreaming(command: TemplateCommand, templateDir: string): Promise<void> {
+  private async executeCommandWithStreaming(
+    command: TemplateCommand,
+    templateDir: string
+  ): Promise<void> {
     return new Promise((resolve, reject) => {
-      const workingDir = command.workingDirectory 
+      const workingDir = command.workingDirectory
         ? path.join(templateDir, command.workingDirectory)
         : templateDir;
 
@@ -254,12 +304,12 @@ export class TemplateLoader {
       }
 
       // Parse command and arguments
-      const [cmd, ...args] = command.command.split(' ');
+      const [cmd, ...args] = command.command.split(" ");
 
       const child = spawn(cmd, args, {
         cwd: workingDir,
-        stdio: ['pipe', 'pipe', 'pipe'],
-        shell: true
+        stdio: ["pipe", "pipe", "pipe"],
+        shell: true,
       });
 
       let hasOutput = false;
@@ -268,54 +318,54 @@ export class TemplateLoader {
       // Start cool loading animation
       loadingAnimation = this.startLoadingAnimation(command.command);
 
-      child.stdout?.on('data', (data) => {
+      child.stdout?.on("data", (data) => {
         // Stop loading animation when output starts
         if (loadingAnimation) {
           clearInterval(loadingAnimation);
           loadingAnimation = null;
-          process.stdout.write('\r\x1b[K'); // Clear current line
+          process.stdout.write("\r\x1b[K"); // Clear current line
         }
         hasOutput = true;
-        
+
         // Stream output directly to console with indentation
         const output = data.toString();
-        output.split('\n').forEach((line: string) => {
+        output.split("\n").forEach((line: string) => {
           if (line.trim()) {
             console.log(`   ${line}`);
           }
         });
       });
 
-      child.stderr?.on('data', (data) => {
+      child.stderr?.on("data", (data) => {
         // Stop loading animation when output starts
         if (loadingAnimation) {
           clearInterval(loadingAnimation);
           loadingAnimation = null;
-          process.stdout.write('\r\x1b[K'); // Clear current line
+          process.stdout.write("\r\x1b[K"); // Clear current line
         }
         hasOutput = true;
-        
+
         // Stream error output directly to console with indentation and color
         const output = data.toString();
-        output.split('\n').forEach((line: string) => {
+        output.split("\n").forEach((line: string) => {
           if (line.trim()) {
             console.log(chalk.yellow(`   ${line}`));
           }
         });
       });
 
-      child.on('close', (code) => {
+      child.on("close", (code) => {
         // Stop loading animation if still running
         if (loadingAnimation) {
           clearInterval(loadingAnimation);
           loadingAnimation = null;
-          process.stdout.write('\r\x1b[K'); // Clear current line
+          process.stdout.write("\r\x1b[K"); // Clear current line
         }
-        
+
         if (!hasOutput) {
-          console.log(chalk.gray('   (no output)'));
+          console.log(chalk.gray("   (no output)"));
         }
-        
+
         if (code === 0) {
           resolve();
         } else {
@@ -323,12 +373,12 @@ export class TemplateLoader {
         }
       });
 
-      child.on('error', (error) => {
+      child.on("error", (error) => {
         // Stop loading animation on error
         if (loadingAnimation) {
           clearInterval(loadingAnimation);
           loadingAnimation = null;
-          process.stdout.write('\r\x1b[K'); // Clear current line
+          process.stdout.write("\r\x1b[K"); // Clear current line
         }
         reject(new Error(`Failed to execute command: ${error.message}`));
       });
@@ -345,9 +395,12 @@ export class TemplateLoader {
   /**
    * Execute a single template command (legacy method - kept for compatibility)
    */
-  private async executeCommand(command: TemplateCommand, templateDir: string): Promise<void> {
+  private async executeCommand(
+    command: TemplateCommand,
+    templateDir: string
+  ): Promise<void> {
     return new Promise((resolve, reject) => {
-      const workingDir = command.workingDirectory 
+      const workingDir = command.workingDirectory
         ? path.join(templateDir, command.workingDirectory)
         : templateDir;
 
@@ -358,34 +411,40 @@ export class TemplateLoader {
       }
 
       // Parse command and arguments
-      const [cmd, ...args] = command.command.split(' ');
+      const [cmd, ...args] = command.command.split(" ");
 
       const child = spawn(cmd, args, {
         cwd: workingDir,
-        stdio: ['pipe', 'pipe', 'pipe'],
-        shell: true
+        stdio: ["pipe", "pipe", "pipe"],
+        shell: true,
       });
 
-      let output = '';
-      let errorOutput = '';
+      let output = "";
+      let errorOutput = "";
 
-      child.stdout?.on('data', (data) => {
+      child.stdout?.on("data", (data) => {
         output += data.toString();
       });
 
-      child.stderr?.on('data', (data) => {
+      child.stderr?.on("data", (data) => {
         errorOutput += data.toString();
       });
 
-      child.on('close', (code) => {
+      child.on("close", (code) => {
         if (code === 0) {
           resolve();
         } else {
-          reject(new Error(`Command exited with code ${code}. Error: ${errorOutput || output}`));
+          reject(
+            new Error(
+              `Command exited with code ${code}. Error: ${
+                errorOutput || output
+              }`
+            )
+          );
         }
       });
 
-      child.on('error', (error) => {
+      child.on("error", (error) => {
         reject(new Error(`Failed to execute command: ${error.message}`));
       });
 
@@ -406,7 +465,7 @@ export class TemplateLoader {
       await fs.remove(this.tempDir);
     } catch (_error) {
       // Ignore cleanup errors
-      console.warn(chalk.yellow('Warning: Could not clean up temporary files'));
+      console.warn(chalk.yellow("Warning: Could not clean up temporary files"));
     }
   }
 
@@ -414,20 +473,20 @@ export class TemplateLoader {
    * Start cool loading animation while waiting for command output
    */
   private startLoadingAnimation(command: string): NodeJS.Timeout {
-    const frames = ['⠋', '⠙', '⠹', '⠸', '⠼', '⠴', '⠦', '⠧', '⠇', '⠏'];
+    const frames = ["⠋", "⠙", "⠹", "⠸", "⠼", "⠴", "⠦", "⠧", "⠇", "⠏"];
     const colors = [chalk.cyan, chalk.blue, chalk.magenta, chalk.green];
     let frameIndex = 0;
     let colorIndex = 0;
-    
+
     const loadingInterval = setInterval(() => {
       const frame = frames[frameIndex];
       const color = colors[colorIndex];
-      const message = command.includes('install') 
-        ? '📦 Installing dependencies...' 
-        : '⚡ Running command...';
-      
+      const message = command.includes("install")
+        ? "📦 Installing dependencies..."
+        : "⚡ Running command...";
+
       process.stdout.write(`\r   ${color(frame)} ${message}`);
-      
+
       frameIndex = (frameIndex + 1) % frames.length;
       if (frameIndex === 0) {
         colorIndex = (colorIndex + 1) % colors.length;

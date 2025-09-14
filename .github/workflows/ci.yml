@@ -2,69 +2,69 @@ name: CI
 
 on:
   push:
-    branches: [ main, develop ]
+    branches: [main, develop]
   pull_request:
-    branches: [ main, develop ]
+    branches: [main, develop]
 
 jobs:
   test:
     runs-on: ubuntu-latest
-    
+
     strategy:
       matrix:
         node-version: [18.x, 20.x]
-      fail-fast: false  # Continue testing other versions even if one fails
-    
+      fail-fast: false # Continue testing other versions even if one fails
+
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
-      
-    - name: Use Node.js ${{ matrix.node-version }}
-      uses: actions/setup-node@v4
-      with:
-        node-version: ${{ matrix.node-version }}
-        
-    - name: Install dependencies
-      run: npm install
-      
-    - name: Run linting
-      run: npm run lint
-      
-    - name: Build project
-      run: npm run build
-      
-    - name: Run unit tests
-      run: npm test
-      
-    - name: Run CLI comprehensive tests
-      run: |
-        echo "⚠️  Skipping comprehensive CLI tests in CI due to stdin interaction issues"
-        echo "✅ These tests should be run manually before releases"
-        echo "   Command: npm run build && node test-cli-comprehensive.js"
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Use Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node-version }}
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Run linting
+        run: npm run lint
+
+      - name: Build project
+        run: npm run build
+
+      - name: Run unit tests
+        run: npm test
+
+      - name: Run CLI comprehensive tests
+        run: |
+          echo "⚠️  Skipping comprehensive CLI tests in CI due to stdin interaction issues"
+          echo "✅ These tests should be run manually before releases"
+          echo "   Command: npm run build && node test-cli-comprehensive.js"
 
   template-validation:
     runs-on: ubuntu-latest
     needs: test
-    
+
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
-      
-    - name: Use Node.js 20.x
-      uses: actions/setup-node@v4
-      with:
-        node-version: 20.x
-        
-    - name: Install dependencies
-      run: npm install
-      
-    - name: Build project
-      run: npm run build
-      
-    - name: Run template validation tests
-      run: npm test -- --testPathPattern=template-validation
-      timeout-minutes: 10
-      
-    - name: Clean up test artifacts
-      if: always()
-      run: rm -rf /tmp/kit-dot-template-validation
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Use Node.js 20.x
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20.x
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Build project
+        run: npm run build
+
+      - name: Run template validation tests
+        run: npm test -- --testPathPattern=template-validation
+        timeout-minutes: 10
+
+      - name: Clean up test artifacts
+        if: always()
+        run: rm -rf /tmp/kitdot-template-validation

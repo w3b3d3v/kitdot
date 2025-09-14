@@ -1,20 +1,23 @@
-import fs from 'fs-extra';
-import path from 'path';
-import { ProjectConfig } from '../types.js';
+import fs from "fs-extra";
+import path from "path";
+import { ProjectConfig } from "../types.js";
 
 export async function setupDocumentation(config: ProjectConfig): Promise<void> {
-  const docsDir = path.join(config.directory, 'docs');
-  
+  const docsDir = path.join(config.directory, "docs");
+
   await createMdBookConfig(docsDir, config);
   await createDocumentationStructure(docsDir, config);
   await createSummary(docsDir, config);
   await createDocumentationContent(docsDir, config);
 }
 
-async function createMdBookConfig(docsDir: string, config: ProjectConfig): Promise<void> {
+async function createMdBookConfig(
+  docsDir: string,
+  config: ProjectConfig
+): Promise<void> {
   const bookToml = `[book]
 title = "${config.name} Documentation"
-description = "Documentation for ${config.name} - A Polkadot Dapp built with kit-dot"
+description = "Documentation for ${config.name} - A Polkadot Dapp built with kitdot"
 authors = ["${config.name} Team"]
 language = "en"
 multilingual = false
@@ -40,27 +43,32 @@ boost-paragraph = 1
 expand = true
 heading-split-level = 3`;
 
-  await fs.writeFile(path.join(docsDir, 'book.toml'), bookToml);
+  await fs.writeFile(path.join(docsDir, "book.toml"), bookToml);
 }
 
-async function createDocumentationStructure(docsDir: string, config: ProjectConfig): Promise<void> {
-  const srcDir = path.join(docsDir, 'src');
+async function createDocumentationStructure(
+  docsDir: string,
+  config: ProjectConfig
+): Promise<void> {
+  const srcDir = path.join(docsDir, "src");
   await fs.ensureDir(srcDir);
-  
-  if (config.features.contracts) {
-    await fs.ensureDir(path.join(srcDir, 'contracts'));
-  }
-  
-  if (config.features.frontend) {
-    await fs.ensureDir(path.join(srcDir, 'frontend'));
-  }
-  
 
-  await fs.ensureDir(path.join(srcDir, 'deployment'));
-  await fs.ensureDir(path.join(srcDir, 'guides'));
+  if (config.features.contracts) {
+    await fs.ensureDir(path.join(srcDir, "contracts"));
+  }
+
+  if (config.features.frontend) {
+    await fs.ensureDir(path.join(srcDir, "frontend"));
+  }
+
+  await fs.ensureDir(path.join(srcDir, "deployment"));
+  await fs.ensureDir(path.join(srcDir, "guides"));
 }
 
-async function createSummary(docsDir: string, config: ProjectConfig): Promise<void> {
+async function createSummary(
+  docsDir: string,
+  config: ProjectConfig
+): Promise<void> {
   let summary = `# Summary
 
 [Introduction](./introduction.md)
@@ -95,7 +103,6 @@ async function createSummary(docsDir: string, config: ProjectConfig): Promise<vo
 `;
   }
 
-
   summary += `# Deployment
 
 - [Overview](./deployment/overview.md)
@@ -109,49 +116,74 @@ async function createSummary(docsDir: string, config: ProjectConfig): Promise<vo
 - [FAQ](./guides/faq.md)
 `;
 
-  await fs.writeFile(path.join(docsDir, 'src/SUMMARY.md'), summary);
+  await fs.writeFile(path.join(docsDir, "src/SUMMARY.md"), summary);
 }
 
-async function createDocumentationContent(docsDir: string, config: ProjectConfig): Promise<void> {
-  const srcDir = path.join(docsDir, 'src');
+async function createDocumentationContent(
+  docsDir: string,
+  config: ProjectConfig
+): Promise<void> {
+  const srcDir = path.join(docsDir, "src");
 
   const introduction = `# ${config.name}
 
-Welcome to the documentation for **${config.name}**, a Polkadot Dapp built with [kit-dot](https://github.com/your-org/kit-dot).
+Welcome to the documentation for **${
+    config.name
+  }**, a Polkadot Dapp built with [kitdot](https://github.com/your-org/kitdot).
 
 ## What is ${config.name}?
 
-${config.name} is a decentralized application (Dapp) built for the Polkadot ecosystem. This project was scaffolded using kit-dot, a TypeScript SDK toolkit that provides everything you need to build modern, scalable Dapps on Polkadot Cloud.
+${
+  config.name
+} is a decentralized application (Dapp) built for the Polkadot ecosystem. This project was scaffolded using kitdot, a TypeScript SDK toolkit that provides everything you need to build modern, scalable Dapps on Polkadot Cloud.
 
 ## Features
 
-${config.features.contracts ? '- **Smart Contracts**: Upgradeable smart contracts using UUPS pattern with Foundry and Hardhat' : ''}
-${config.features.frontend ? '- **Frontend**: Modern React application with Polkadot integration' : ''}
+${
+  config.features.contracts
+    ? "- **Smart Contracts**: Upgradeable smart contracts using UUPS pattern with Foundry and Hardhat"
+    : ""
+}
+${
+  config.features.frontend
+    ? "- **Frontend**: Modern React application with Polkadot integration"
+    : ""
+}
 - **Documentation**: Comprehensive documentation built with mdbook
 
 ## Architecture
 
 This project follows a monorepo structure with clear separation of concerns:
 
-${config.features.contracts ? `
+${
+  config.features.contracts
+    ? `
 ### Smart Contracts
 - \`contracts/develop/\` - Contract development with Foundry
 - \`contracts/deploy/\` - Deployment scripts with Hardhat
-` : ''}
+`
+    : ""
+}
 
-${config.features.frontend ? `
+${
+  config.features.frontend
+    ? `
 ### Frontend
 - \`front/\` - React application with TypeScript and Tailwind CSS
-` : ''}
+`
+    : ""
+}
 
 
 ## Getting Started
 
-To get started with ${config.name}, follow the [Quick Start Guide](./getting-started/quick-start.md).
+To get started with ${
+    config.name
+  }, follow the [Quick Start Guide](./getting-started/quick-start.md).
 
-## Built with kit-dot
+## Built with kitdot
 
-This project was created using kit-dot, which provides:
+This project was created using kitdot, which provides:
 
 - 🚀 **Rapid scaffolding** of Polkadot Dapp projects
 - 🔧 **Development tools** for smart contracts and frontend
@@ -159,13 +191,13 @@ This project was created using kit-dot, which provides:
 - 🌐 **Cloud integration** for scalable deployments
 - 📚 **Documentation** generation and management
 
-Learn more about kit-dot in the [official documentation](https://github.com/your-org/kit-dot).
+Learn more about kitdot in the [official documentation](https://github.com/your-org/kitdot).
 `;
 
-  await fs.writeFile(path.join(srcDir, 'introduction.md'), introduction);
+  await fs.writeFile(path.join(srcDir, "introduction.md"), introduction);
 
-  await fs.ensureDir(path.join(srcDir, 'getting-started'));
-  
+  await fs.ensureDir(path.join(srcDir, "getting-started"));
+
   const quickStart = `# Quick Start
 
 This guide will help you get ${config.name} up and running in minutes.
@@ -176,7 +208,11 @@ Before you begin, make sure you have the following installed:
 
 - [Node.js](https://nodejs.org/) (v18 or higher)
 - [npm](https://www.npmjs.com/) (v8 or higher)
-${config.features.contracts ? '- [Foundry](https://getfoundry.sh/) (for smart contract development)' : ''}
+${
+  config.features.contracts
+    ? "- [Foundry](https://getfoundry.sh/) (for smart contract development)"
+    : ""
+}
 
 ## Installation
 
@@ -193,7 +229,9 @@ ${config.features.contracts ? '- [Foundry](https://getfoundry.sh/) (for smart co
 
 ## Development
 
-${config.features.frontend ? `
+${
+  config.features.frontend
+    ? `
 ### Frontend Development
 
 1. Navigate to the frontend directory:
@@ -207,9 +245,13 @@ ${config.features.frontend ? `
    \`\`\`
 
 3. Open [http://localhost:3000](http://localhost:3000) in your browser.
-` : ''}
+`
+    : ""
+}
 
-${config.features.contracts ? `
+${
+  config.features.contracts
+    ? `
 ### Smart Contract Development
 
 1. Navigate to the contracts development directory:
@@ -226,18 +268,31 @@ ${config.features.contracts ? `
    \`\`\`bash
    forge test
    \`\`\`
-` : ''}
+`
+    : ""
+}
 
 
 ## Next Steps
 
 - Read the [Project Structure](./project-structure.md) guide
 - Follow the [Development Setup](./development-setup.md) instructions
-${config.features.contracts ? '- Learn about [Smart Contract Development](../contracts/development.md)' : ''}
-${config.features.frontend ? '- Explore [Frontend Development](../frontend/getting-started.md)' : ''}
+${
+  config.features.contracts
+    ? "- Learn about [Smart Contract Development](../contracts/development.md)"
+    : ""
+}
+${
+  config.features.frontend
+    ? "- Explore [Frontend Development](../frontend/getting-started.md)"
+    : ""
+}
 `;
 
-  await fs.writeFile(path.join(srcDir, 'getting-started/quick-start.md'), quickStart);
+  await fs.writeFile(
+    path.join(srcDir, "getting-started/quick-start.md"),
+    quickStart
+  );
 
   if (config.features.contracts) {
     await createContractsDocs(srcDir);
@@ -246,7 +301,6 @@ ${config.features.frontend ? '- Explore [Frontend Development](../frontend/getti
   if (config.features.frontend) {
     await createFrontendDocs(srcDir);
   }
-
 }
 
 async function createContractsDocs(srcDir: string): Promise<void> {
@@ -280,7 +334,10 @@ All contracts in this project use the UUPS (Universal Upgradeable Proxy Standard
 See the [Development Guide](./development.md) to start building smart contracts.
 `;
 
-  await fs.writeFile(path.join(srcDir, 'contracts/overview.md'), contractsOverview);
+  await fs.writeFile(
+    path.join(srcDir, "contracts/overview.md"),
+    contractsOverview
+  );
 }
 
 async function createFrontendDocs(srcDir: string): Promise<void> {
@@ -310,6 +367,8 @@ The frontend is a modern React application built with TypeScript and Tailwind CS
 See the [Getting Started Guide](./getting-started.md) to begin frontend development.
 `;
 
-  await fs.writeFile(path.join(srcDir, 'frontend/overview.md'), frontendOverview);
+  await fs.writeFile(
+    path.join(srcDir, "frontend/overview.md"),
+    frontendOverview
+  );
 }
-

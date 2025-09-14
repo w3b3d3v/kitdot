@@ -1,12 +1,14 @@
-import fs from 'fs-extra';
-import path from 'path';
-import { ProjectConfig } from '../types.js';
+import fs from "fs-extra";
+import path from "path";
+import { ProjectConfig } from "../types.js";
 
-export async function createProjectStructure(config: ProjectConfig): Promise<void> {
+export async function createProjectStructure(
+  config: ProjectConfig
+): Promise<void> {
   await fs.ensureDir(config.directory);
 
   // For frontend-only projects, use single repo structure (no subdirectories)
-  if (config.type === 'frontend') {
+  if (config.type === "frontend") {
     // Frontend-only projects don't need subdirectories
     // Template will be loaded directly to project root
     return;
@@ -14,17 +16,17 @@ export async function createProjectStructure(config: ProjectConfig): Promise<voi
 
   // For fullstack and backend projects, create monorepo structure
   const folders = [];
-  
+
   if (config.features.contracts) {
-    folders.push('contracts');
+    folders.push("contracts");
   }
-  
+
   if (config.features.frontend) {
-    folders.push('front');
+    folders.push("front");
   }
-  
+
   if (config.features.documentation) {
-    folders.push('docs');
+    folders.push("docs");
   }
 
   for (const folder of folders) {
@@ -38,58 +40,55 @@ export async function createProjectStructure(config: ProjectConfig): Promise<voi
 
 async function createRootPackageJson(config: ProjectConfig): Promise<void> {
   // Frontend-only projects don't need root package.json - template provides it
-  if (config.type === 'frontend') {
+  if (config.type === "frontend") {
     return;
   }
 
   const packageJson = {
     name: config.name,
-    version: '0.1.0',
-    description: 'A Polkadot Dapp built with kit-dot',
+    version: "0.1.0",
+    description: "A Polkadot Dapp built with kitdot",
     private: true,
-    type: 'module',
+    type: "module",
     workspaces: getWorkspaces(config),
     scripts: {
-      'install:all': 'npm install',
-      'build:all': 'npm run build --workspaces',
-      'lint:all': 'npm run lint --workspaces',
-      'test:all': 'npm run test --workspaces'
+      "install:all": "npm install",
+      "build:all": "npm run build --workspaces",
+      "lint:all": "npm run lint --workspaces",
+      "test:all": "npm run test --workspaces",
     },
     devDependencies: {
-      '@types/node': '^22.16.2',
-      'typescript': '^5.6.2'
+      "@types/node": "^22.16.2",
+      typescript: "^5.6.2",
     },
     engines: {
-      node: '>=18.0.0',
-      npm: '>=8.0.0'
-    }
+      node: ">=18.0.0",
+      npm: ">=8.0.0",
+    },
   };
 
-  await fs.writeJson(
-    path.join(config.directory, 'package.json'), 
-    packageJson, 
-    { spaces: 2 }
-  );
+  await fs.writeJson(path.join(config.directory, "package.json"), packageJson, {
+    spaces: 2,
+  });
 }
 
 function getWorkspaces(config: ProjectConfig): string[] {
   const workspaces = [];
-  
+
   if (config.features.contracts) {
-    workspaces.push('contracts');
+    workspaces.push("contracts");
   }
-  
+
   if (config.features.frontend) {
-    workspaces.push('front');
+    workspaces.push("front");
   }
-  
 
   return workspaces;
 }
 
 async function createGitignore(config: ProjectConfig): Promise<void> {
   // Frontend-only projects should use template's gitignore
-  if (config.type === 'frontend') {
+  if (config.type === "frontend") {
     return;
   }
 
@@ -137,37 +136,49 @@ contracts/typechain-types/
 docs/book/`;
 
   await fs.writeFile(
-    path.join(config.directory, '.gitignore'), 
+    path.join(config.directory, ".gitignore"),
     gitignoreContent
   );
 }
 
 async function createReadme(config: ProjectConfig): Promise<void> {
   // Frontend-only projects should use template's README
-  if (config.type === 'frontend') {
+  if (config.type === "frontend") {
     return;
   }
 
   const readmeContent = `# ${config.name}
 
-A Polkadot Dapp built with [kit-dot](https://github.com/your-org/kit-dot).
+A Polkadot Dapp built with [kitdot](https://github.com/your-org/kitdot).
 
 ## Project Structure
 
-${config.features.contracts ? `
+${
+  config.features.contracts
+    ? `
 ### 📄 Smart Contracts
 - \`contracts/\` - Smart contract development and deployment
-` : ''}
+`
+    : ""
+}
 
-${config.features.frontend ? `
+${
+  config.features.frontend
+    ? `
 ### 🎨 Frontend
 - \`front/\` - React frontend application with Polkadot integration
-` : ''}
+`
+    : ""
+}
 
-${config.features.documentation ? `
+${
+  config.features.documentation
+    ? `
 ### 📚 Documentation
 - \`docs/\` - Project documentation built with mdbook
-` : ''}
+`
+    : ""
+}
 
 ## Getting Started
 
@@ -176,29 +187,41 @@ ${config.features.documentation ? `
    npm run install:all
    \`\`\`
 
-${config.features.frontend ? `
+${
+  config.features.frontend
+    ? `
 2. Start the frontend development server:
    \`\`\`bash
    cd front
    npm run dev
    \`\`\`
-` : ''}
+`
+    : ""
+}
 
-${config.features.contracts ? `
+${
+  config.features.contracts
+    ? `
 3. Build smart contracts:
    \`\`\`bash
    cd contracts
    forge build
    \`\`\`
-` : ''}
+`
+    : ""
+}
 
-${config.features.documentation ? `
+${
+  config.features.documentation
+    ? `
 4. View documentation:
    \`\`\`bash
    cd docs
    mdbook serve
    \`\`\`
-` : ''}
+`
+    : ""
+}
 
 ## Commands
 
@@ -206,13 +229,10 @@ ${config.features.documentation ? `
 - \`npm run lint:all\` - Lint all packages  
 - \`npm run test:all\` - Test all packages
 
-## Built with kit-dot
+## Built with kitdot
 
-This project was created using [kit-dot](https://github.com/your-org/kit-dot), a toolkit for building Dapps on Polkadot Cloud.
+This project was created using [kitdot](https://github.com/your-org/kitdot), a toolkit for building Dapps on Polkadot Cloud.
 `;
 
-  await fs.writeFile(
-    path.join(config.directory, 'README.md'), 
-    readmeContent
-  );
+  await fs.writeFile(path.join(config.directory, "README.md"), readmeContent);
 }
