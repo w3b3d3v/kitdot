@@ -30,8 +30,7 @@ export const TEMPLATE_REGISTRY: TemplateRegistry = {
       "Hardhat",
     ],
     optionalSetup: {
-      description:
-        "Install dependencies and generate frontend components",
+      description: "Install dependencies and generate frontend components",
       commands: [
         {
           command: "npm install",
@@ -81,31 +80,6 @@ export const TEMPLATE_REGISTRY: TemplateRegistry = {
     name: "React Web3Auth Social Login",
     description:
       "React dApp template with Web3Auth social login - users authenticate with Google/Twitter/Facebook while blockchain interactions are abstracted away for seamless UX",
-    framework: "React",
-    category: "frontend",
-    source: {
-      type: "remote",
-      repository: "w3b3d3v/web3auth-examples",
-      branch: "web3dev-version",
-      directory: "quick-starts/react-quick-start",
-    },
-    features: [
-      "React",
-      "Web3Auth",
-      "Social Login",
-      "Google Auth",
-      "Twitter Auth",
-      "Facebook Auth",
-      "TypeScript",
-      "Seamless UX",
-    ],
-    documentationUrl:
-      "https://kitdot-fronted-templates.w3d.community/quick-starts/react-quick-start/",
-  },
-  "react-with-web2-logins": {
-    name: "React with Social Logins",
-    description:
-      "Users authenticate with Google/Twitter/Facebook while blockchain interactions are abstracted away for seamless UX",
     framework: "React",
     category: "frontend",
     source: {
