@@ -112,7 +112,7 @@ export class TemplateLoader {
 
     try {
       const emitter = degit(degitSource, {
-        cache: true,
+        cache: false,
         force: true,
         verbose: false,
       });
@@ -123,10 +123,59 @@ export class TemplateLoader {
     } catch (error) {
       const errorMessage =
         error instanceof Error ? error.message : String(error);
+
+      // If commit hash resolution fails, try fetching latest commit hash manually
+      if (errorMessage.includes("could not find commit hash")) {
+        spinner.text = `Resolving latest commit for ${source.branch}...`;
+        try {
+          const latestCommit = await this.getLatestCommitHash(
+            source.repository!,
+            source.branch || "main"
+          );
+          const commitSource = source.directory
+            ? `${source.repository}/${source.directory}#${latestCommit}`
+            : `${source.repository}#${latestCommit}`;
+
+          const retryEmitter = degit(commitSource, {
+            cache: false,
+            force: true,
+            verbose: false,
+          });
+
+          await retryEmitter.clone(tempTemplatePath);
+          return tempTemplatePath;
+        } catch (retryError) {
+          throw new Error(
+            `Failed to download template from ${source.repository} after commit hash retry: ${retryError}`
+          );
+        }
+      }
+
       throw new Error(
         `Failed to download template from ${source.repository}: ${errorMessage}`
       );
     }
+  }
+
+  /**
+   * Get the latest commit hash for a specific branch from GitHub API
+   */
+  private async getLatestCommitHash(
+    repository: string,
+    branch: string
+  ): Promise<string> {
+    const response = await fetch(
+      `https://api.github.com/repos/${repository}/branches/${branch}`
+    );
+
+    if (!response.ok) {
+      throw new Error(
+        `Failed to fetch branch info for ${repository}#${branch}: ${response.statusText}`
+      );
+    }
+
+    const branchData = await response.json();
+    return branchData.commit.sha;
   }
 
   /**
