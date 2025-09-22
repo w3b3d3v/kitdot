@@ -1,0 +1,4 @@
+.env
+
+# Wagmi generated types
+src/generated.ts

@@ -11,7 +11,7 @@ module.exports = {
     '!src/**/*.d.ts'
   ],
   transform: {
-    '^.+\\.(js|ts)$': ['ts-jest', {
+    '^.+\\.(ts|js)$': ['ts-jest', {
       useESM: true
     }]
   },
@@ -23,5 +23,9 @@ module.exports = {
   // Detect open handles to help debug async issues
   detectOpenHandles: true,
   // Set timeout for test suite
-  testTimeout: 30000
+  testTimeout: 30000,
+  // Transform ES modules in node_modules that Jest can't handle
+  transformIgnorePatterns: [
+    'node_modules/(?!.*)'
+  ]
 };

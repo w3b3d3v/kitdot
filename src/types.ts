@@ -21,7 +21,6 @@ export type ProjectType = 'fullstack' | 'frontend' | 'backend';
 export interface ProjectFeatures {
   contracts: boolean;
   frontend: boolean;
-  documentation: boolean;
 }
 
 export interface TemplateOptions {
@@ -90,7 +89,3 @@ export interface TemplateCommand {
   timeout?: number; // Optional timeout in milliseconds (default: 60000)
 }
 
-export interface DocsConfig {
-  enabled: boolean;
-  structure: 'global' | 'modular';
-}

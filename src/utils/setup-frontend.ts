@@ -11,9 +11,7 @@ export async function setupFrontend(config: ProjectConfig): Promise<void> {
 
   const template = getTemplate(config.template.name);
   if (!template) {
-    throw new Error(
-      `Template '${config.template.name}' not found in registry`
-    );
+    throw new Error(`Template '${config.template.name}' not found in registry`);
   }
 
   // Determine where to place the template based on template category and project type
@@ -27,24 +25,27 @@ export async function setupFrontend(config: ProjectConfig): Promise<void> {
   }
 }
 
-function determineFrontendDirectory(config: ProjectConfig, template: { category?: string }): string {
+function determineFrontendDirectory(
+  config: ProjectConfig,
+  template: { category?: string }
+): string {
   // Frontend-only projects: always at project root
-  if (config.type === 'frontend') {
+  if (config.type === "frontend") {
     return config.directory;
   }
-  
+
   // Fullstack projects:
-  if (config.type === 'fullstack') {
+  if (config.type === "fullstack") {
     // If template category is 'fullstack', place at project root (template contains both frontend and contracts)
-    if (template.category === 'fullstack') {
+    if (template.category === "fullstack") {
       return config.directory;
     }
-    // If template category is 'frontend', place in 'front' subdirectory (we'll add contracts separately)
-    if (template.category === 'frontend') {
-      return path.join(config.directory, "front");
+    // If template category is 'frontend', place in 'frontend' subdirectory (we'll add contracts separately)
+    if (template.category === "frontend") {
+      return path.join(config.directory, "frontend");
     }
   }
-  
+
   // Fallback to project root
   return config.directory;
 }
