@@ -1,9 +1,5 @@
-#!/usr/bin/env node
-
 import { strict as assert } from 'assert';
-import { getTemplatesByCategory, getTemplate, TEMPLATE_REGISTRY } from '../dist/templates/registry.js';
-
-console.log('🧪 Testing frontend template filtering fix...');
+import { getTemplatesByCategory, getTemplate, TEMPLATE_REGISTRY } from '../src/templates/registry.js';
 
 /**
  * Test that frontend selection only shows frontend templates (AC: 1, 5)
@@ -99,7 +95,7 @@ async function testDefaultIndicationLogic() {
   ];
 
   for (const { type, expectedDefault } of projectTypes) {
-    const templates = getTemplatesByCategory(type);
+    const templates = getTemplatesByCategory(type as 'frontend' | 'fullstack' | 'backend');
 
     for (const template of templates) {
       // Apply the new default indication logic from init.ts
@@ -157,7 +153,7 @@ async function testNoCrossCategoryContamination() {
   const allCategories = ['frontend', 'fullstack', 'backend'];
 
   for (const category of allCategories) {
-    const templates = getTemplatesByCategory(category);
+    const templates = getTemplatesByCategory(category as 'frontend' | 'fullstack' | 'backend');
 
     for (const template of templates) {
       assert.equal(template.category, category,
@@ -194,8 +190,8 @@ async function testTemplateSelectionFlow() {
     console.log(`  Testing ${projectType} project type...`);
 
     // Get templates for this project type (simulating init.ts logic)
-    let availableTemplates;
-    let expectedCategory;
+    let availableTemplates: any[];
+    let expectedCategory: string;
 
     if (projectType === 'frontend') {
       availableTemplates = getTemplatesByCategory('frontend');
@@ -206,6 +202,10 @@ async function testTemplateSelectionFlow() {
     } else if (projectType === 'fullstack') {
       availableTemplates = getTemplatesByCategory('fullstack');
       expectedCategory = 'fullstack';
+    } else {
+      // Default case to satisfy TypeScript
+      availableTemplates = [];
+      expectedCategory = '';
     }
 
     // Verify templates are available
@@ -231,24 +231,32 @@ async function testTemplateSelectionFlow() {
   console.log('✅ Template selection flow test passed!');
 }
 
-async function runAllTests() {
-  try {
+describe("Frontend Template Filtering", () => {
+  test("frontend only filtering", async () => {
     await testFrontendOnlyFiltering();
+  });
+
+  test("fullstack filtering", async () => {
     await testFullstackFiltering();
+  });
+
+  test("no duplicate defaults", async () => {
     await testNoDuplicateDefaults();
+  });
+
+  test("default indication logic", async () => {
     await testDefaultIndicationLogic();
+  });
+
+  test("template descriptions", async () => {
     await testTemplateDescriptions();
+  });
+
+  test("no cross category contamination", async () => {
     await testNoCrossCategoryContamination();
+  });
+
+  test("template selection flow", async () => {
     await testTemplateSelectionFlow();
-
-    console.log('🎉 All frontend template filtering tests passed!');
-    console.log('✅ Story 2.5 acceptance criteria validated through comprehensive testing');
-    process.exit(0);
-  } catch (error) {
-    console.error('❌ Frontend template filtering test failed:', error.message);
-    console.error('🔍 Stack trace:', error.stack);
-    process.exit(1);
-  }
-}
-
-runAllTests();
+  });
+});

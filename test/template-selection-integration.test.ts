@@ -1,20 +1,17 @@
-#!/usr/bin/env node
-
 import { strict as assert } from 'assert';
 import fs from 'fs-extra';
 import path from 'path';
 
-console.log('🧪 Testing template selection integration...');
-
 async function testTemplateSelectionLogic() {
   console.log('🔄 Testing template selection logic integration...');
 
-  // Import the function that would be used in CLI
-  const { gatherProjectInfo } = await import('../dist/commands/init.js').catch(() => {
-    // If not available as export, test the logic indirectly
-    console.log('  Note: Testing logic patterns since gatherProjectInfo is not exported');
-    return {};
-  });
+  // Import the command that would be used in CLI
+  try {
+    const { initCommand } = await import('../src/commands/init.js');
+    console.log('  ✅ init command module loaded successfully');
+  } catch (error) {
+    console.log('  ⚠️  Could not load init command module');
+  }
 
   // Test template selection scenarios
   const scenarios = [
@@ -121,18 +118,16 @@ async function testFeatureDetermination() {
   console.log('✅ Feature determination test passed!');
 }
 
-async function runAllTests() {
-  try {
+describe("Template Selection Integration", () => {
+  test("template selection logic", async () => {
     await testTemplateSelectionLogic();
+  });
+
+  test("template paths", async () => {
     await testTemplatePaths();
+  });
+
+  test("feature determination", async () => {
     await testFeatureDetermination();
-
-    console.log('🎉 All template selection integration tests passed!');
-    process.exit(0);
-  } catch (error) {
-    console.error('❌ Integration test failed:', error.message);
-    process.exit(1);
-  }
-}
-
-runAllTests();
+  });
+});

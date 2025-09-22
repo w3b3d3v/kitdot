@@ -1,13 +1,9 @@
-#!/usr/bin/env node
-
 import { strict as assert } from "assert";
 import {
   getTemplatesByCategory,
   getTemplate,
   TEMPLATE_REGISTRY,
-} from "../dist/templates/registry.js";
-
-console.log("🧪 Testing template selection functionality...");
+} from "../src/templates/registry.js";
 
 async function testTemplateRegistry() {
   console.log("📋 Testing template registry structure...");
@@ -263,21 +259,28 @@ async function testTemplateAvailability() {
   console.log("✅ Template availability test passed!");
 }
 
-async function runAllTests() {
-  try {
+describe("Template Selection", () => {
+  test("template registry structure", async () => {
     await testTemplateRegistry();
+  });
+
+  test("templates by category", async () => {
     await testTemplatesByCategory();
+  });
+
+  test("template retrieval", async () => {
     await testTemplateRetrieval();
+  });
+
+  test("template labeling", async () => {
     await testTemplateLabeling();
+  });
+
+  test("fallback logic", async () => {
     await testFallbackLogic();
+  });
+
+  test("template availability", async () => {
     await testTemplateAvailability();
-
-    console.log("🎉 All template selection tests passed!");
-    process.exit(0);
-  } catch (error) {
-    console.error("❌ Test failed:", error.message);
-    process.exit(1);
-  }
-}
-
-runAllTests();
+  });
+});

@@ -302,8 +302,11 @@ describe("AGENTS.md Template Integration", () => {
       expect(isSubdirectory).toBe(true);
 
       if (isSubdirectory) {
-        const root = path.dirname(windowsPath);
-        expect(root.replace(/\//g, "\\")).toBe(expectedRoot);
+        // For cross-platform compatibility, normalize to forward slashes then use path.dirname
+        const normalizedPath = windowsPath.replace(/\\/g, "/");
+        const root = path.dirname(normalizedPath);
+        const windowsRoot = root.replace(/\//g, "\\");
+        expect(windowsRoot).toBe(expectedRoot);
       }
     });
 
@@ -323,7 +326,7 @@ describe("AGENTS.md Template Integration", () => {
   });
 
   describe("Error Handling", () => {
-    test("should continue processing even when AGENTS.md copy fails", async () => {
+    test("should handle gracefully when AGENTS.md source doesn't exist", async () => {
       const config: ProjectConfig = {
         name: "test-error-handling",
         type: "frontend",
@@ -336,9 +339,18 @@ describe("AGENTS.md Template Integration", () => {
         installRustTools: false,
       };
 
-      // Create read-only directory to cause permission error
+      // Ensure directory exists
       await fs.ensureDir(config.directory);
-      await fs.chmod(config.directory, 0o444); // Read-only
+
+      // Temporarily move AGENTS.md to simulate missing source file
+      const agentsSourcePath = path.join(process.cwd(), 'templates/llms/AGENTS.md');
+      const tempAgentsPath = path.join(process.cwd(), 'templates/llms/AGENTS.md.backup');
+
+      let agentsExisted = false;
+      if (await fs.pathExists(agentsSourcePath)) {
+        await fs.move(agentsSourcePath, tempAgentsPath);
+        agentsExisted = true;
+      }
 
       await fs.ensureDir(path.join(process.cwd(), "templates/default/frontend"));
       await fs.writeFile(
@@ -356,13 +368,19 @@ describe("AGENTS.md Template Integration", () => {
         source: { type: "local" as const, localPath: "templates/default/frontend" },
       };
 
-      // Should not throw error even when file copy fails
+      // Should not throw error even when AGENTS.md source doesn't exist
       await expect(
         templateLoader.loadTemplate(templateDefinition, config.directory, config)
       ).resolves.not.toThrow();
 
-      // Restore permissions for cleanup
-      await fs.chmod(config.directory, 0o755);
+      // Verify AGENTS.md was not copied (since source doesn't exist)
+      const agentsTargetPath = path.join(config.directory, 'AGENTS.md');
+      expect(await fs.pathExists(agentsTargetPath)).toBe(false);
+
+      // Restore AGENTS.md if it existed
+      if (agentsExisted) {
+        await fs.move(tempAgentsPath, agentsSourcePath);
+      }
     });
   });
 });
