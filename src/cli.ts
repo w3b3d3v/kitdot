@@ -9,11 +9,41 @@ const program = new Command();
 
 program
   .name("kitdot")
-  .description("TypeScript SDK for building Polkadot Dapps with integrated toolchain")
+  .description("A TypeScript SDK toolkit for building Dapps on Polkadot Cloud")
   .version("0.1.0")
   .addHelpText(
     "after",
-    "\nQuick Start:\n  kitdot install             Create new project (alias for init)\n  kitdot -y                  Create project with default template\n  kitdot init                Interactive project creation\n\nDevelopment Tools:\n  kitdot tools install-rust  Install Rust toolchain\n  kitdot tools check         Check tool status\n\n" + chalk.blue("📋 Get Started Fast") + "\n" + chalk.gray("Follow these steps to create a full-stack Polkadot Dapp:\n") + "\n1. " + chalk.blue("Create new project") + "\n   " + chalk.gray("Create a project with React frontend and smart contracts") + "\n   " + chalk.yellow("kitdot install") + " or " + chalk.yellow("kitdot -y") + "\n\n2. " + chalk.blue("Navigate to project") + "\n   " + chalk.gray("Enter your project directory") + "\n   " + chalk.yellow("cd your-project-name") + "\n\n3. " + chalk.blue("Start frontend development") + "\n   " + chalk.gray("Install dependencies and start the frontend") + "\n   " + chalk.yellow("cd frontend && npm install && npm run dev") + "\n\n4. " + chalk.blue("Start contracts development") + "\n   " + chalk.gray("Install dependencies and compile contracts") + "\n   " + chalk.yellow("cd contracts && npm install && npx hardhat compile") + "\n"
+    "\nQuick Start:\n  kitdot install             Create new project (alias for init)\n  kitdot -y                  Create project with default template\n  kitdot init                Interactive project creation\n\nDevelopment Tools:\n  kitdot tools install-rust  Install Rust toolchain\n  kitdot tools check         Check tool status\n\n" +
+      chalk.blue("📋 Get Started Fast") +
+      "\n" +
+      chalk.gray("Follow these steps to create a full-stack Polkadot Dapp:\n") +
+      "\n1. " +
+      chalk.blue("Create new project") +
+      "\n   " +
+      chalk.gray("Create a project with React frontend and smart contracts") +
+      "\n   " +
+      chalk.yellow("kitdot install") +
+      " or " +
+      chalk.yellow("kitdot -y") +
+      "\n\n2. " +
+      chalk.blue("Navigate to project") +
+      "\n   " +
+      chalk.gray("Enter your project directory") +
+      "\n   " +
+      chalk.yellow("cd your-project-name") +
+      "\n\n3. " +
+      chalk.blue("Start frontend development") +
+      "\n   " +
+      chalk.gray("Install dependencies and start the frontend") +
+      "\n   " +
+      chalk.yellow("cd frontend && npm install && npm run dev") +
+      "\n\n4. " +
+      chalk.blue("Start contracts development") +
+      "\n   " +
+      chalk.gray("Install dependencies and compile contracts") +
+      "\n   " +
+      chalk.yellow("cd contracts && npm install && npx hardhat compile") +
+      "\n"
   );
 
 program
@@ -70,32 +100,40 @@ toolsProgram
   });
 
 // Fallback for 'tools' without subcommand
-toolsProgram
-  .action(async () => {
-    const { toolsCommand } = await import("./commands/tools.js");
-    await toolsCommand();
-  });
-
+toolsProgram.action(async () => {
+  const { toolsCommand } = await import("./commands/tools.js");
+  await toolsCommand();
+});
 
 // Handle -y flag at top level before commander parsing
 const args = process.argv.slice(2);
-if (args.includes('-y') && !args.includes('init')) {
+if (args.includes("-y") && !args.includes("init")) {
   // Convert "kitdot -y" to "kitdot init -y"
-  const yIndex = args.indexOf('-y');
+  const yIndex = args.indexOf("-y");
   args.splice(yIndex, 1); // Remove -y
-  args.unshift('init', '-y'); // Add init -y at the beginning
+  args.unshift("init", "-y"); // Add init -y at the beginning
   // Update process.argv for commander to parse
   process.argv = [process.argv[0], process.argv[1], ...args];
 }
 
 // Handle unknown commands with helpful error
-program.on('command:*', (operands) => {
+program.on("command:*", (operands) => {
   console.error(chalk.red(`❌ Unknown command: ${operands[0]}`));
-  console.log(chalk.yellow('\nDid you mean one of these?'));
-  console.log(chalk.cyan('  kitdot install             Create new project (alias for init)'));
-  console.log(chalk.cyan('  kitdot init                Initialize a new project'));
-  console.log(chalk.cyan('  kitdot tools               Manage development tools'));
-  console.log(chalk.cyan('  kitdot -y                  Quick start with default template'));
+  console.log(chalk.yellow("\nDid you mean one of these?"));
+  console.log(
+    chalk.cyan(
+      "  kitdot install             Create new project (alias for init)"
+    )
+  );
+  console.log(
+    chalk.cyan("  kitdot init                Initialize a new project")
+  );
+  console.log(
+    chalk.cyan("  kitdot tools               Manage development tools")
+  );
+  console.log(
+    chalk.cyan("  kitdot -y                  Quick start with default template")
+  );
   console.log(chalk.gray('\nRun "kitdot --help" for all available commands.'));
   process.exit(1);
 });

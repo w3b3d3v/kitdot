@@ -14,7 +14,7 @@ describe('CLI Improvements', () => {
     test('should show enhanced help text with Quick Start section', async () => {
       const { stdout } = await runCommand(['--help']);
 
-      expect(stdout).toContain('TypeScript SDK for building Polkadot Dapps with integrated toolchain');
+      expect(stdout).toContain('A TypeScript SDK toolkit for building Dapps on Polkadot Cloud');
       expect(stdout).toContain('Quick Start:');
       expect(stdout).toContain('kitdot -y                  Create project with default template');
       expect(stdout).toContain('kitdot init                Interactive project creation');
@@ -144,7 +144,7 @@ describe('CLI Improvements', () => {
       const result = await runCommand(['install', '--help']);
 
       expect(result.exitCode).toBe(0);
-      expect(result.stdout).toContain('Initialize kitdot SDK on this machine/project');
+      expect(result.stdout).toContain('Initialize a new Polkadot Dapp project (same as init)');
     });
 
     test('should accept project name argument in install command', async () => {
@@ -169,8 +169,8 @@ describe('CLI Improvements', () => {
       const { stdout } = await runCommand(['--help']);
 
       expect(stdout).toContain('install [options] [project-name]');
-      expect(stdout).toContain('Initialize kitdot SDK on this');
-      expect(stdout).toContain('kitdot install             Initialize SDK on new machine');
+      expect(stdout).toContain('Initialize a new Polkadot Dapp project');
+      expect(stdout).toContain('kitdot install             Create new project (alias for init)');
     });
   });
 
