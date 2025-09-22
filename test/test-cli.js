@@ -28,7 +28,7 @@ async function runTest() {
 
   // We'll test the utility functions directly since we can't easily simulate interactive input
   const { createProjectStructure } = await import(
-    "./dist/utils/project-structure.js"
+    "../dist/utils/project-structure.js"
   );
 
   const testConfig = {

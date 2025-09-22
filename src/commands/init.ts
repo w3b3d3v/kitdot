@@ -6,16 +6,15 @@ import { ProjectConfig, ProjectType, ProjectFeatures, TemplateConfig } from '../
 import { createProjectStructure } from '../utils/project-structure.js';
 import { setupContracts } from '../utils/setup-contracts.js';
 import { setupFrontend } from '../utils/setup-frontend.js';
-import { setupDocumentation } from '../utils/setup-docs.js';
 import { getTemplatesByCategory, getTemplate } from '../templates/registry.js';
 import { displayHomeScreen } from '../utils/homeScreen.js';
 
-export async function initCommand(projectName?: string, options?: { dir?: string }) {
+export async function initCommand(projectName?: string, options?: { dir?: string; yes?: boolean }) {
   // Display the new styled home screen
   displayHomeScreen();
 
   try {
-    const config = await gatherProjectInfo(projectName, options?.dir);
+    const config = await gatherProjectInfo(projectName, options?.dir, options?.yes);
     await createProject(config);
     // Template displays its own next steps - no additional CLI messages needed
   } catch (error) {
@@ -24,7 +23,73 @@ export async function initCommand(projectName?: string, options?: { dir?: string
   }
 }
 
-async function gatherProjectInfo(projectName?: string, targetDir?: string): Promise<ProjectConfig> {
+async function gatherProjectInfo(projectName?: string, targetDir?: string, useYes?: boolean): Promise<ProjectConfig> {
+  // If -y flag is used, skip template question and use default
+  let defaultAnswer;
+  if (useYes) {
+    defaultAnswer = { useDefault: true };
+  } else {
+    // First, ask about using default template
+    const defaultTemplateQuestion = {
+      type: 'confirm' as const,
+      name: 'useDefault',
+      message: 'Install default template [Y/n]?',
+      default: true
+    };
+
+    defaultAnswer = await inquirer.prompt([defaultTemplateQuestion]);
+  }
+
+  // Get project name if not provided
+  let name: string;
+  if (!projectName) {
+    const nameQuestion = {
+      type: 'input' as const,
+      name: 'projectName',
+      message: 'What is your project name?',
+      default: 'my-polkadot-dapp',
+      validate: (input: string) => {
+        if (!/^[a-zA-Z0-9-_]+$/.test(input)) {
+          return 'Project name can only contain letters, numbers, hyphens, and underscores';
+        }
+        return true;
+      }
+    };
+
+    const nameAnswer = await inquirer.prompt([nameQuestion]);
+    name = nameAnswer.projectName;
+  } else {
+    name = projectName;
+  }
+
+  const directory = targetDir || path.join(process.cwd(), name);
+
+  // If user wants default template, use local templates/default
+  if (defaultAnswer.useDefault) {
+    const template: TemplateConfig = {
+      name: 'default',
+      source: {
+        type: 'local',
+        localPath: 'templates/default'
+      }
+    };
+
+    const features: ProjectFeatures = {
+      contracts: true,
+      frontend: true
+    };
+
+    return {
+      name,
+      type: 'fullstack',
+      directory,
+      features,
+      template,
+      installRustTools: false
+    };
+  }
+
+  // If user wants non-default, proceed with existing flow
   const baseQuestions = [
     {
       type: 'list' as const,
@@ -47,48 +112,30 @@ async function gatherProjectInfo(projectName?: string, targetDir?: string): Prom
     }
   ];
 
-  let answers: { projectName?: string; projectType?: string; selectedTemplate?: string };
-  
-  if (!projectName) {
-    const nameQuestion = {
-      type: 'input' as const,
-      name: 'projectName',
-      message: 'What is your project name?',
-      default: 'my-polkadot-dapp',
-      validate: (input: string) => {
-        if (!/^[a-zA-Z0-9-_]+$/.test(input)) {
-          return 'Project name can only contain letters, numbers, hyphens, and underscores';
-        }
-        return true;
-      }
-    };
-    
-    answers = await inquirer.prompt([nameQuestion, ...baseQuestions]);
-  } else {
-    answers = await inquirer.prompt(baseQuestions);
-  }
-
-  const name = projectName || answers.projectName || 'my-polkadot-dapp';
+  const answers = await inquirer.prompt(baseQuestions);
   const type = (answers.projectType || 'fullstack') as ProjectType;
-  const directory = targetDir || path.join(process.cwd(), name);
 
-  // Template selection first
+  // Template selection for non-default flow
   let template: TemplateConfig | undefined;
-  
-  if (type === 'fullstack' || type === 'frontend') {
+
+  if (type === 'frontend' || type === 'fullstack' || type === 'backend') {
     let availableTemplates;
     let messageText;
 
     if (type === 'frontend') {
-      // Frontend-only: Show only frontend templates
+      // Frontend-only: Show all frontend templates including default
       availableTemplates = getTemplatesByCategory('frontend');
       messageText = 'Choose a frontend template:';
+    } else if (type === 'backend') {
+      // Backend-only: Show all backend templates including default contracts
+      availableTemplates = getTemplatesByCategory('backend');
+      messageText = 'Choose a smart contracts template:';
     } else if (type === 'fullstack') {
-      // Full-stack: Show frontend templates, contracts will be added automatically
-      availableTemplates = getTemplatesByCategory('frontend').concat(getTemplatesByCategory('fullstack'));
-      messageText = 'Choose a frontend template (Hardhat contracts will be added automatically):';
+      // Full-stack: Show fullstack templates first, fallback to frontend if needed
+      availableTemplates = getTemplatesByCategory('fullstack');
+      messageText = 'Choose a fullstack template:';
     } else {
-      // Should not reach here for frontend projects, but fallback to fullstack templates
+      // Fallback to fullstack templates
       availableTemplates = getTemplatesByCategory('fullstack');
       messageText = 'Choose a template:';
     }
@@ -98,14 +145,23 @@ async function gatherProjectInfo(projectName?: string, targetDir?: string): Prom
         type: 'list' as const,
         name: 'selectedTemplate',
         message: messageText,
-        choices: availableTemplates.map(template => ({
-          name: `${template.framework} - ${template.description}`,
-          value: template.key
-        }))
+        choices: availableTemplates.map(template => {
+          // Determine if this is the default template for the current project type
+          const isDefault = (type === 'frontend' && template.key === 'default-frontend') ||
+                          (type === 'backend' && template.key === 'default-contracts') ||
+                          (type === 'fullstack' && template.key === 'default');
+
+          return {
+            name: isDefault
+              ? `⭐ ${template.framework} - ${template.description} (Default)`
+              : `${template.framework} - ${template.description}`,
+            value: template.key
+          };
+        })
       };
 
       const templateAnswer = await inquirer.prompt([templateQuestion]);
-      
+
       template = {
         name: templateAnswer.selectedTemplate,
         source: availableTemplates.find(t => t.key === templateAnswer.selectedTemplate)!.source
@@ -116,6 +172,24 @@ async function gatherProjectInfo(projectName?: string, targetDir?: string): Prom
         name: availableTemplates[0].key,
         source: availableTemplates[0].source
       };
+    } else {
+      // No templates available - auto-select appropriate default
+      if (type === 'frontend') {
+        template = {
+          name: 'default-frontend',
+          source: { type: 'local', localPath: 'templates/default/frontend' }
+        };
+      } else if (type === 'backend') {
+        template = {
+          name: 'default-contracts',
+          source: { type: 'local', localPath: 'templates/default/contracts' }
+        };
+      } else {
+        template = {
+          name: 'default',
+          source: { type: 'local', localPath: 'templates/default' }
+        };
+      }
     }
   }
 
@@ -125,8 +199,7 @@ async function gatherProjectInfo(projectName?: string, targetDir?: string): Prom
 
   const features: ProjectFeatures = {
     contracts: determineNeedsContracts(type, templateCategory),
-    frontend: type === 'fullstack' || type === 'frontend',
-    documentation: determineNeedsDocumentation(type, templateCategory)
+    frontend: type === 'fullstack' || type === 'frontend'
   };
 
   return {
@@ -142,29 +215,20 @@ async function gatherProjectInfo(projectName?: string, targetDir?: string): Prom
 function determineNeedsContracts(projectType: ProjectType, templateCategory?: string): boolean {
   // Backend projects always need contracts
   if (projectType === 'backend') return true;
-  
+
   // Frontend projects never need separate contracts
   if (projectType === 'frontend') return false;
-  
+
   // Fullstack projects:
   // - If template is 'fullstack', it already contains contracts - don't create separate
   // - If template is 'frontend', we need to add contracts separately
   if (projectType === 'fullstack') {
     return templateCategory !== 'fullstack';
   }
-  
+
   return false;
 }
 
-function determineNeedsDocumentation(projectType: ProjectType, _templateCategory?: string): boolean {
-  // Frontend-only projects don't need docs
-  if (projectType === 'frontend') return false;
-  
-  // For fullstack projects:
-  // - If template is 'fullstack', it might already contain docs - but we can add them anyway
-  // - If template is 'frontend', we definitely need to add docs
-  return true;
-}
 
 
 
@@ -188,14 +252,10 @@ async function createProject(config: ProjectConfig) {
       console.log(chalk.green('✅ Frontend setup complete'));
     }
 
-    if (config.features.documentation) {
-      spinner.start('Setting up documentation...');
-      await setupDocumentation(config);
-      spinner.succeed('Documentation setup complete');
-    }
 
 
-    // Project creation completed - template will display its own next steps
+    // Project creation completed - display contextual next steps
+    displayNextSteps(config);
   } catch (error) {
     spinner.fail('Failed to create project');
     throw error;
@@ -205,4 +265,47 @@ async function createProject(config: ProjectConfig) {
   process.nextTick(() => {
     // Allow any pending operations to complete before exit
   });
+}
+
+function displayNextSteps(config: ProjectConfig): void {
+  console.log(chalk.blue('\n📋 Next Steps'));
+  console.log(chalk.gray('Follow these steps to start developing your Polkadot Dapp:\n'));
+
+  let stepNumber = 1;
+
+  // Step 1: Navigate to project
+  console.log(chalk.blue(`${stepNumber}. Navigate to project`));
+  console.log(chalk.gray('   Enter your project directory'));
+  console.log(chalk.yellow(`   cd ${config.name}`));
+  console.log('');
+  stepNumber++;
+
+  // Step 2: Frontend development (if frontend is included)
+  if (config.features.frontend) {
+    console.log(chalk.blue(`${stepNumber}. Start frontend development`));
+    console.log(chalk.gray('   Install dependencies and start the frontend'));
+    console.log(chalk.yellow('   cd frontend && npm install && npm run dev'));
+    console.log('');
+    stepNumber++;
+  }
+
+  // Step 3: Contracts development (if contracts are included)
+  if (config.features.contracts) {
+    console.log(chalk.blue(`${stepNumber}. Start contracts development`));
+    console.log(chalk.gray('   Install dependencies and compile contracts'));
+    console.log(chalk.yellow('   cd contracts && npm install && npx hardhat compile'));
+    console.log('');
+    stepNumber++;
+  }
+
+  // Additional helpful info
+  if (config.features.frontend && config.features.contracts) {
+    console.log(chalk.cyan('💡 Tip: You can run frontend and contracts in separate terminals'));
+  }
+
+  // AGENTS.md tip
+  console.log(chalk.cyan('🤖 Tip: Check out AGENTS.md in your project root for comprehensive AI agent instructions'));
+
+  console.log(chalk.cyan('📚 For more help: kitdot --help'));
+  console.log('');
 }

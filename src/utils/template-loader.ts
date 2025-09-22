@@ -184,7 +184,7 @@ export class TemplateLoader {
   private async copyTemplate(
     sourcePath: string,
     targetPath: string,
-    _config: ProjectConfig
+    config: ProjectConfig
   ): Promise<void> {
     await fs.copy(sourcePath, targetPath, {
       filter: (src) => {
@@ -204,6 +204,126 @@ export class TemplateLoader {
         ].includes(basename);
       },
     });
+
+    // Copy AGENTS.md from templates/llms to project root
+    await this.copyAgentsFile(targetPath, config);
+
+    // Personalize package.json files with project name
+    await this.personalizeTemplate(targetPath, config);
+  }
+
+  /**
+   * Copy AGENTS.md from templates/llms to project root
+   */
+  private async copyAgentsFile(
+    targetPath: string,
+    config: ProjectConfig
+  ): Promise<void> {
+    try {
+      const agentsSourcePath = path.join(process.cwd(), 'templates/llms/AGENTS.md');
+
+      // Determine the project root directory
+      let projectRootPath: string;
+
+      if (config.type === 'frontend' || config.type === 'backend') {
+        // For single-purpose projects, target path is already the project root
+        projectRootPath = targetPath;
+      } else {
+        // For fullstack projects, we need to go to the parent directory (project root)
+        // if we're inside a subdirectory like 'frontend' or 'contracts'
+        if (targetPath.endsWith('/frontend') || targetPath.endsWith('/contracts')) {
+          projectRootPath = path.dirname(targetPath);
+        } else {
+          // Template was placed at project root (fullstack template category)
+          projectRootPath = targetPath;
+        }
+      }
+
+      const agentsTargetPath = path.join(projectRootPath, 'AGENTS.md');
+
+      // Check if source file exists
+      if (await fs.pathExists(agentsSourcePath)) {
+        await fs.copy(agentsSourcePath, agentsTargetPath);
+      }
+    } catch (error) {
+      // Log warning but don't fail the whole process
+      console.warn(`Warning: Could not copy AGENTS.md: ${error}`);
+    }
+  }
+
+  /**
+   * Personalize template by replacing placeholders with actual project values
+   */
+  private async personalizeTemplate(
+    targetPath: string,
+    config: ProjectConfig
+  ): Promise<void> {
+    // Find all package.json files in the template
+    const packageJsonFiles = await this.findPackageJsonFiles(targetPath);
+
+    for (const packageJsonPath of packageJsonFiles) {
+      await this.personalizePackageJson(packageJsonPath, config);
+    }
+  }
+
+  /**
+   * Find all package.json files recursively
+   */
+  private async findPackageJsonFiles(basePath: string): Promise<string[]> {
+    const packageJsonFiles: string[] = [];
+
+    const searchRecursively = async (dirPath: string) => {
+      const entries = await fs.readdir(dirPath, { withFileTypes: true });
+
+      for (const entry of entries) {
+        const fullPath = path.join(dirPath, entry.name);
+
+        if (entry.isDirectory()) {
+          // Skip node_modules and other excluded directories
+          if (!["node_modules", ".git", "dist", "build"].includes(entry.name)) {
+            await searchRecursively(fullPath);
+          }
+        } else if (entry.name === "package.json") {
+          packageJsonFiles.push(fullPath);
+        }
+      }
+    };
+
+    await searchRecursively(basePath);
+    return packageJsonFiles;
+  }
+
+  /**
+   * Personalize a single package.json file
+   */
+  private async personalizePackageJson(
+    packageJsonPath: string,
+    config: ProjectConfig
+  ): Promise<void> {
+    try {
+      const packageJson = await fs.readJson(packageJsonPath);
+
+      // Replace name with project name, keeping suffix if it exists
+      if (packageJson.name) {
+        const originalName = packageJson.name;
+
+        // If name contains "create-polkadot-dapp", replace with project name
+        if (originalName.includes("create-polkadot-dapp")) {
+          if (originalName.includes("-frontend")) {
+            packageJson.name = `${config.name}-frontend`;
+          } else if (originalName.includes("-contracts")) {
+            packageJson.name = `${config.name}-contracts`;
+          } else {
+            packageJson.name = config.name;
+          }
+        }
+      }
+
+      // Write the updated package.json back
+      await fs.writeJson(packageJsonPath, packageJson, { spaces: 2 });
+    } catch (error) {
+      console.warn(`Warning: Could not personalize ${packageJsonPath}: ${error}`);
+    }
   }
 
   /**
