@@ -7,12 +7,14 @@ import {
   ProjectType,
   ProjectFeatures,
   TemplateConfig,
+  InitMode,
 } from "../types.js";
 import { createProjectStructure } from "../utils/project-structure.js";
 import { setupContracts } from "../utils/setup-contracts.js";
 import { setupFrontend } from "../utils/setup-frontend.js";
-import { getTemplatesByCategory, getTemplate } from "../templates/registry.js";
+import { getTemplate, getTemplatesForMode } from "../templates/registry.js";
 import { displayHomeScreen } from "../utils/homeScreen.js";
+import { createTemplateLoader } from "../utils/template-loader.js";
 
 export async function initCommand(
   projectName?: string,
@@ -105,121 +107,168 @@ async function gatherProjectInfo(
     };
   }
 
-  // If user wants non-default, proceed with existing flow
-  const baseQuestions = [
-    {
-      type: "list" as const,
-      name: "projectType",
-      message: "What type of project do you want to create?",
-      choices: [
-        {
-          name: "🌟 Full-stack Dapp (Frontend + Smart Contracts)",
-          value: "fullstack",
-        },
-        {
-          name: "🎨 Frontend only (React app for Polkadot)",
-          value: "frontend",
-        },
-        {
-          name: "⚙️  Backend only (Smart Contracts only)",
-          value: "backend",
-        },
-      ],
-    },
-  ];
+  // Step 1: Mode Selection
+  const modeQuestion = {
+    type: "list" as const,
+    name: "initMode",
+    message: "What type of project would you like to create?",
+    choices: [
+      {
+        name: "🌟 Full Stack (Frontend + Smart Contracts)",
+        value: "fullstack" as InitMode,
+      },
+      {
+        name: "🎨 Frontend Only",
+        value: "frontend-only" as InitMode,
+      },
+      {
+        name: "⚙️  Smart Contracts Only",
+        value: "smartcontracts-only" as InitMode,
+      },
+    ],
+  };
 
-  const answers = await inquirer.prompt(baseQuestions);
-  const type = (answers.projectType || "fullstack") as ProjectType;
+  const modeAnswer = await inquirer.prompt([modeQuestion]);
+  const selectedMode = modeAnswer.initMode as InitMode;
 
-  // Template selection for non-default flow
+  // Convert mode to project type for internal processing
+  let type: ProjectType;
+  switch (selectedMode) {
+    case "fullstack":
+      type = "fullstack";
+      break;
+    case "frontend-only":
+      type = "frontend";
+      break;
+    case "smartcontracts-only":
+      type = "backend";
+      break;
+    default:
+      type = "fullstack";
+  }
+
+  // Template selection based on selected mode
   let template: TemplateConfig | undefined;
+  const availableTemplates = getTemplatesForMode(selectedMode);
 
-  if (type === "frontend" || type === "fullstack" || type === "backend") {
-    let availableTemplates;
-    let messageText;
-
-    if (type === "frontend") {
-      // Frontend-only: Show all frontend templates including default
-      availableTemplates = getTemplatesByCategory("frontend");
+  let messageText: string;
+  switch (selectedMode) {
+    case "fullstack":
+      messageText = "Select a template:";
+      break;
+    case "frontend-only":
       messageText = "Choose a frontend template:";
-    } else if (type === "backend") {
-      // Backend-only: Show all backend templates including default contracts
-      availableTemplates = getTemplatesByCategory("backend");
+      break;
+    case "smartcontracts-only":
       messageText = "Choose a smart contracts template:";
-    } else if (type === "fullstack") {
-      // Full-stack: Show fullstack templates first, fallback to frontend if needed
-      availableTemplates = getTemplatesByCategory("fullstack");
-      messageText = "Choose a fullstack template:";
-    } else {
-      // Fallback to fullstack templates
-      availableTemplates = getTemplatesByCategory("fullstack");
+      break;
+    default:
       messageText = "Choose a template:";
-    }
+  }
 
-    if (availableTemplates.length > 1) {
-      const templateQuestion = {
-        type: "list" as const,
-        name: "selectedTemplate",
-        message: messageText,
-        choices: availableTemplates.map((template) => {
-          // Determine if this is the default template for the current project type
-          const isDefault =
-            (type === "frontend" && template.key === "default-frontend") ||
-            (type === "backend" && template.key === "default-contracts") ||
-            (type === "fullstack" && template.key === "default");
+  if (availableTemplates.length > 1) {
+    const templateQuestion = {
+      type: "list" as const,
+      name: "selectedTemplate",
+      message: messageText,
+      choices: availableTemplates.map((template) => {
+        // Create display name with type indicator for fullstack mode
+        let displayName: string;
 
-          return {
-            name: isDefault
-              ? `${template.framework} - ${template.description} (Default)`
-              : `${template.framework} - ${template.description}`,
-            value: template.key,
-          };
-        }),
-      };
+        if (selectedMode === "fullstack") {
+          // Show type indicator for fullstack mode
+          const typeIndicator = template.category === "frontend" ? " (Frontend Only)" :
+                               template.category === "smartcontract" ? " (Smart Contracts Only)" :
+                               template.category === "fullstack" ? " (Full Stack)" : "";
+          displayName = `${template.framework} - ${template.description}${typeIndicator}`;
+        } else {
+          // For mode-specific selections, don't show type indicator since it's redundant
+          displayName = `${template.framework} - ${template.description}`;
+        }
 
-      const templateAnswer = await inquirer.prompt([templateQuestion]);
+        // Determine if this is the default template for the current project type
+        const isDefault =
+          (type === "frontend" && template.key === "default-frontend") ||
+          (type === "backend" && template.key === "default-contracts") ||
+          (type === "fullstack" && template.key === "default");
 
+        return {
+          name: isDefault ? `${displayName} (Default)` : displayName,
+          value: template.key,
+        };
+      }),
+    };
+
+    const templateAnswer = await inquirer.prompt([templateQuestion]);
+
+    template = {
+      name: templateAnswer.selectedTemplate,
+      source: availableTemplates.find(
+        (t) => t.key === templateAnswer.selectedTemplate
+      )!.source,
+    };
+  } else if (availableTemplates.length === 1) {
+    // Use the only available template
+    template = {
+      name: availableTemplates[0].key,
+      source: availableTemplates[0].source,
+    };
+  } else {
+    // No templates available - auto-select appropriate default
+    if (type === "frontend") {
       template = {
-        name: templateAnswer.selectedTemplate,
-        source: availableTemplates.find(
-          (t) => t.key === templateAnswer.selectedTemplate
-        )!.source,
+        name: "default-frontend",
+        source: { type: "local", localPath: "templates/default/frontend" },
       };
-    } else if (availableTemplates.length === 1) {
-      // Use the only available template
+    } else if (type === "backend") {
       template = {
-        name: availableTemplates[0].key,
-        source: availableTemplates[0].source,
+        name: "default-contracts",
+        source: { type: "local", localPath: "templates/default/contracts" },
       };
     } else {
-      // No templates available - auto-select appropriate default
-      if (type === "frontend") {
-        template = {
-          name: "default-frontend",
-          source: { type: "local", localPath: "templates/default/frontend" },
-        };
-      } else if (type === "backend") {
-        template = {
-          name: "default-contracts",
-          source: { type: "local", localPath: "templates/default/contracts" },
-        };
-      } else {
-        template = {
-          name: "default",
-          source: { type: "local", localPath: "templates/default" },
-        };
-      }
+      template = {
+        name: "default",
+        source: { type: "local", localPath: "templates/default" },
+      };
     }
   }
 
-  // Determine features based on template category and user selection
+  // Determine features and handle auto-pairing for fullstack mode
   const selectedTemplate = template ? getTemplate(template.name) : null;
   const templateCategory = selectedTemplate?.category;
 
-  const features: ProjectFeatures = {
-    contracts: determineNeedsContracts(type, templateCategory),
-    frontend: type === "fullstack" || type === "frontend",
-  };
+  // Auto-pairing logic for fullstack mode
+  let additionalTemplate: TemplateConfig | undefined;
+  let features: ProjectFeatures;
+
+  if (selectedMode === "fullstack" && templateCategory) {
+    if (templateCategory === "frontend") {
+      // Frontend template selected → pair with default-smartcontracts
+      additionalTemplate = {
+        name: "default-contracts",
+        source: { type: "local", localPath: "templates/default/contracts" },
+      };
+      features = { contracts: true, frontend: true };
+      console.log(chalk.blue("🔗 Auto-pairing with default smart contracts for full-stack setup"));
+    } else if (templateCategory === "smartcontract") {
+      // Smartcontract template selected → pair with default-frontend
+      additionalTemplate = {
+        name: "default-frontend",
+        source: { type: "local", localPath: "templates/default/frontend" },
+      };
+      features = { contracts: true, frontend: true };
+      console.log(chalk.blue("🔗 Auto-pairing with default frontend for full-stack setup"));
+    } else {
+      // Fullstack template selected → no pairing needed
+      features = { contracts: true, frontend: true };
+    }
+  } else {
+    // Non-fullstack modes or no template
+    features = {
+      contracts: determineNeedsContracts(type, templateCategory),
+      frontend: type === "fullstack" || type === "frontend",
+    };
+  }
 
   return {
     name,
@@ -227,6 +276,7 @@ async function gatherProjectInfo(
     directory,
     features,
     template,
+    additionalTemplate, // New field for auto-paired template
     installRustTools: false,
   };
 }
@@ -269,6 +319,22 @@ async function createProject(config: ProjectConfig) {
       console.log(chalk.blue("🎨 Setting up frontend..."));
       await setupFrontend(config);
       console.log(chalk.green("✅ Frontend setup complete"));
+    }
+
+    // Handle additional template for auto-pairing in fullstack mode
+    if (config.additionalTemplate) {
+      const additionalTemplate = getTemplate(config.additionalTemplate.name);
+      if (additionalTemplate) {
+        if (additionalTemplate.category === "smartcontract") {
+          spinner.start("Setting up additional smart contracts...");
+          await setupAdditionalContracts(config);
+          spinner.succeed("Additional smart contracts setup complete");
+        } else if (additionalTemplate.category === "frontend") {
+          console.log(chalk.blue("🎨 Setting up additional frontend..."));
+          await setupAdditionalFrontend(config);
+          console.log(chalk.green("✅ Additional frontend setup complete"));
+        }
+      }
     }
 
     // Project creation completed - display contextual next steps
@@ -328,4 +394,44 @@ function displayNextSteps(config: ProjectConfig): void {
 
   console.log(chalk.cyan("📚 For more help: kitdot --help"));
   console.log("");
+}
+
+/**
+ * Setup additional contracts template for auto-pairing in fullstack mode
+ */
+async function setupAdditionalContracts(config: ProjectConfig): Promise<void> {
+  if (!config.additionalTemplate) return;
+
+  const template = getTemplate(config.additionalTemplate.name);
+  if (!template || template.category !== "smartcontract") return;
+
+  // For auto-paired contracts, always place in 'contracts' subdirectory
+  const contractsDir = path.join(config.directory, "contracts");
+
+  const templateLoader = createTemplateLoader();
+  try {
+    await templateLoader.loadTemplate(template, contractsDir, config);
+  } finally {
+    await templateLoader.cleanup();
+  }
+}
+
+/**
+ * Setup additional frontend template for auto-pairing in fullstack mode
+ */
+async function setupAdditionalFrontend(config: ProjectConfig): Promise<void> {
+  if (!config.additionalTemplate) return;
+
+  const template = getTemplate(config.additionalTemplate.name);
+  if (!template || template.category !== "frontend") return;
+
+  // For auto-paired frontend, always place in 'frontend' subdirectory
+  const frontendDir = path.join(config.directory, "frontend");
+
+  const templateLoader = createTemplateLoader();
+  try {
+    await templateLoader.loadTemplate(template, frontendDir, config);
+  } finally {
+    await templateLoader.cleanup();
+  }
 }

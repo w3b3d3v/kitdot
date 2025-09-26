@@ -12,7 +12,11 @@ module.exports = {
   ],
   transform: {
     '^.+\\.(ts|js)$': ['ts-jest', {
-      useESM: true
+      useESM: true,
+      tsconfig: {
+        target: 'ES2022',
+        module: 'ESNext'
+      }
     }]
   },
   moduleNameMapper: {

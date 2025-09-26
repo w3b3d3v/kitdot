@@ -4,6 +4,7 @@ export interface ProjectConfig {
   directory: string;
   features: ProjectFeatures;
   template?: TemplateConfig;
+  additionalTemplate?: TemplateConfig; // For auto-paired templates in fullstack mode
   platformDetected?: string;
   rustInstalled?: boolean;
   toolInstallConsent?: boolean;
@@ -17,6 +18,10 @@ export interface TemplateConfig {
 }
 
 export type ProjectType = 'fullstack' | 'frontend' | 'backend';
+
+export type TemplateCategory = 'frontend' | 'fullstack' | 'smartcontract';
+
+export type InitMode = 'fullstack' | 'frontend-only' | 'smartcontracts-only';
 
 export interface ProjectFeatures {
   contracts: boolean;
@@ -56,7 +61,7 @@ export interface TemplateDefinition {
   name: string;
   description: string;
   framework: string;
-  category: 'frontend' | 'fullstack' | 'backend';
+  category: TemplateCategory;
   source: TemplateSource;
   features: string[];
   documentationUrl?: string; // Optional documentation URL

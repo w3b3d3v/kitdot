@@ -35,8 +35,8 @@ async function testTemplateRegistry() {
   );
   assert.equal(
     TEMPLATE_REGISTRY["default-contracts"].category,
-    "backend",
-    "Default contracts template should be backend category"
+    "smartcontract",
+    "Default contracts template should be smartcontract category"
   );
 
   console.log("✅ Template registry structure test passed!");
@@ -55,14 +55,14 @@ async function testTemplatesByCategory() {
     "Frontend templates should include default-frontend"
   );
 
-  // Test backend templates include default-contracts
-  const backendTemplates = getTemplatesByCategory("backend");
+  // Test smartcontract templates include default-contracts
+  const backendTemplates = getTemplatesByCategory("smartcontract");
   const hasDefaultContracts = backendTemplates.some(
     (template) => template.key === "default-contracts"
   );
   assert(
     hasDefaultContracts,
-    "Backend templates should include default-contracts"
+    "Smartcontract templates should include default-contracts"
   );
 
   // Test fullstack templates include default
@@ -124,7 +124,7 @@ async function testTemplateLabeling() {
     },
     {
       type: "backend",
-      templates: getTemplatesByCategory("backend"),
+      templates: getTemplatesByCategory("smartcontract"),
       expectedDefault: "default-contracts",
     },
   ];
@@ -218,7 +218,7 @@ async function testTemplateAvailability() {
 
   // Test different availability scenarios
   const frontendTemplates = getTemplatesByCategory("frontend");
-  const backendTemplates = getTemplatesByCategory("backend");
+  const backendTemplates = getTemplatesByCategory("smartcontract");
   const fullstackTemplates = getTemplatesByCategory("fullstack");
 
   // Should have at least default templates
@@ -228,7 +228,7 @@ async function testTemplateAvailability() {
   );
   assert(
     backendTemplates.length >= 1,
-    "Should have at least one backend template"
+    "Should have at least one smartcontract template"
   );
   assert(
     fullstackTemplates.length >= 1,
@@ -238,7 +238,7 @@ async function testTemplateAvailability() {
   // Test selection logic based on template count
   for (const [category, templates] of [
     ["frontend", frontendTemplates],
-    ["backend", backendTemplates],
+    ["smartcontract", backendTemplates],
     ["fullstack", fullstackTemplates],
   ]) {
     if (templates.length > 1) {

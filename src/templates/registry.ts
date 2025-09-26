@@ -1,4 +1,4 @@
-import { TemplateRegistry } from "../types.js";
+import { TemplateRegistry, TemplateCategory } from "../types.js";
 
 /**
  * Template Registry - Defines available project templates
@@ -45,7 +45,7 @@ export const TEMPLATE_REGISTRY: TemplateRegistry = {
     name: "Default Smart Contracts (Hardhat)",
     description: "Local default Hardhat smart contracts setup with Solidity",
     framework: "Hardhat",
-    category: "backend",
+    category: "smartcontract",
     source: {
       type: "local",
       localPath: "templates/default/contracts",
@@ -53,72 +53,72 @@ export const TEMPLATE_REGISTRY: TemplateRegistry = {
     features: ["Solidity", "Hardhat", "TypeScript"],
   },
   // Official Parity template (updated to use remote source)
-  "basic-polkadot-dapp": {
-    name: "Basic Polkadot DApp",
-    description:
-      "Official React + Solidity + Hardhat template from create-polkadot-dapp",
-    framework: "React",
-    category: "fullstack",
-    source: {
-      type: "remote",
-      repository: "paritytech/create-polkadot-dapp",
-      branch: "main",
-      directory: "templates/react-solidity-hardhat",
-    },
-    features: [
-      "React",
-      "TypeScript",
-      "Vite",
-      "Tailwind CSS",
-      "Solidity",
-      "Hardhat",
-    ],
-    optionalSetup: {
-      description: "Install dependencies and generate frontend components",
-      commands: [
-        {
-          command: "npm install",
-          workingDirectory: "frontend",
-          description: "Install frontend dependencies",
-          timeout: 180000, // 3 minutes timeout for npm install
-        },
-        {
-          command: "npm run generate",
-          workingDirectory: "frontend",
-          description:
-            "Generate frontend components and setup required dependencies",
-          timeout: 120000, // 2 minutes timeout for generation
-        },
-      ],
-    },
-    nextSteps: {
-      title: "Get Started with Your Polkadot DApp",
-      instructions: [
-        {
-          title: "Install Dependencies",
-          commands: [
-            "cd contracts && npm install",
-            "cd frontend && npm install",
-          ],
-          description:
-            "Install all required packages for both contracts and frontend",
-        },
-        {
-          title: "Start Development",
-          commands: ["npm run dev"],
-          description: "Start the development server to see your app in action",
-          workingDirectory: "frontend",
-        },
-        {
-          title: "Compile Contracts",
-          commands: ["npm run compile"],
-          description: "Compile your smart contracts for deployment",
-          workingDirectory: "contracts",
-        },
-      ],
-      documentationUrl: "https://docs.polkadot.cloud/tutorials/basic-dapp",
-    },
-  },
+  // "basic-polkadot-dapp": {
+  //   name: "Basic Polkadot DApp",
+  //   description:
+  //     "Official React + Solidity + Hardhat template from create-polkadot-dapp",
+  //   framework: "React",
+  //   category: "fullstack",
+  //   source: {
+  //     type: "remote",
+  //     repository: "paritytech/create-polkadot-dapp",
+  //     branch: "main",
+  //     directory: "templates/react-solidity-hardhat",
+  //   },
+  //   features: [
+  //     "React",
+  //     "TypeScript",
+  //     "Vite",
+  //     "Tailwind CSS",
+  //     "Solidity",
+  //     "Hardhat",
+  //   ],
+  //   optionalSetup: {
+  //     description: "Install dependencies and generate frontend components",
+  //     commands: [
+  //       {
+  //         command: "npm install",
+  //         workingDirectory: "frontend",
+  //         description: "Install frontend dependencies",
+  //         timeout: 180000, // 3 minutes timeout for npm install
+  //       },
+  //       {
+  //         command: "npm run generate",
+  //         workingDirectory: "frontend",
+  //         description:
+  //           "Generate frontend components and setup required dependencies",
+  //         timeout: 120000, // 2 minutes timeout for generation
+  //       },
+  //     ],
+  //   },
+  //   nextSteps: {
+  //     title: "Get Started with Your Polkadot DApp",
+  //     instructions: [
+  //       {
+  //         title: "Install Dependencies",
+  //         commands: [
+  //           "cd contracts && npm install",
+  //           "cd frontend && npm install",
+  //         ],
+  //         description:
+  //           "Install all required packages for both contracts and frontend",
+  //       },
+  //       {
+  //         title: "Start Development",
+  //         commands: ["npm run dev"],
+  //         description: "Start the development server to see your app in action",
+  //         workingDirectory: "frontend",
+  //       },
+  //       {
+  //         title: "Compile Contracts",
+  //         commands: ["npm run compile"],
+  //         description: "Compile your smart contracts for deployment",
+  //         workingDirectory: "contracts",
+  //       },
+  //     ],
+  //     documentationUrl: "https://docs.polkadot.cloud/tutorials/basic-dapp",
+  //   },
+  // },
 
   "social-login-web3-react": {
     name: "React Web3Auth Social Login",
@@ -150,12 +150,66 @@ export const TEMPLATE_REGISTRY: TemplateRegistry = {
 /**
  * Get available templates by category
  */
-export function getTemplatesByCategory(
-  category: "frontend" | "fullstack" | "backend"
-) {
+export function getTemplatesByCategory(category: TemplateCategory) {
   return Object.entries(TEMPLATE_REGISTRY)
     .filter(([, template]) => template.category === category)
     .map(([key, template]) => ({ key, ...template }));
+}
+
+/**
+ * Get all available templates grouped by category
+ */
+export function getAllTemplatesByCategory() {
+  const categories: Record<
+    TemplateCategory,
+    ReturnType<typeof getTemplatesByCategory>
+  > = {
+    frontend: getTemplatesByCategory("frontend"),
+    smartcontract: getTemplatesByCategory("smartcontract"),
+    fullstack: getTemplatesByCategory("fullstack"),
+  };
+
+  return categories;
+}
+
+/**
+ * Get template filtering utilities by type
+ */
+export function filterTemplatesByTypes(
+  categories: TemplateCategory[]
+): ReturnType<typeof getTemplatesByCategory> {
+  const allTemplates = Object.entries(TEMPLATE_REGISTRY)
+    .filter(([, template]) => categories.includes(template.category))
+    .map(([key, template]) => ({ key, ...template }));
+
+  return allTemplates;
+}
+
+/**
+ * Get templates based on init mode
+ */
+export function getTemplatesForMode(
+  mode: "fullstack" | "frontend-only" | "smartcontracts-only"
+) {
+  switch (mode) {
+    case "fullstack":
+      // Show ALL templates with type indicators
+      return Object.entries(TEMPLATE_REGISTRY).map(([key, template]) => ({
+        key,
+        ...template,
+      }));
+    case "frontend-only":
+      // Show only frontend templates
+      return getTemplatesByCategory("frontend");
+    case "smartcontracts-only":
+      // Show only smart contract templates
+      return getTemplatesByCategory("smartcontract");
+    default:
+      return Object.entries(TEMPLATE_REGISTRY).map(([key, template]) => ({
+        key,
+        ...template,
+      }));
+  }
 }
 
 /**

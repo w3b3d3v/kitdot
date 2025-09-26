@@ -12,6 +12,7 @@ import {
   TemplateCommand,
   NextStepInstruction,
 } from "../types.js";
+import { resolveTemplatePath } from "./sdk-paths.js";
 
 /**
  * Template Loader - Handles loading templates from local and remote sources
@@ -75,7 +76,7 @@ export class TemplateLoader {
    * Load local template
    */
   private async loadLocalTemplate(source: TemplateSource): Promise<string> {
-    const templatePath = path.join(process.cwd(), source.localPath!);
+    const templatePath = await resolveTemplatePath(source.localPath!);
 
     if (!(await fs.pathExists(templatePath))) {
       throw new Error(`Local template not found at ${templatePath}`);
@@ -220,7 +221,7 @@ export class TemplateLoader {
     config: ProjectConfig
   ): Promise<void> {
     try {
-      const agentsSourcePath = path.join(process.cwd(), 'templates/llms/AGENTS.md');
+      const agentsSourcePath = await resolveTemplatePath('templates/llms/AGENTS.md');
 
       // Determine the project root directory
       let projectRootPath: string;

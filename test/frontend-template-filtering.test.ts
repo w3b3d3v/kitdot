@@ -61,7 +61,7 @@ async function testNoDuplicateDefaults() {
 
   const frontendTemplates = getTemplatesByCategory('frontend');
   const fullstackTemplates = getTemplatesByCategory('fullstack');
-  const backendTemplates = getTemplatesByCategory('backend');
+  const backendTemplates = getTemplatesByCategory('smartcontract');
 
   // Count templates with "default" in their key for each category
   const frontendDefaults = frontendTemplates.filter(t => t.key.includes('default'));
@@ -71,12 +71,12 @@ async function testNoDuplicateDefaults() {
   // Each category should have exactly one default template
   assert.equal(frontendDefaults.length, 1, 'Frontend should have exactly one default template');
   assert.equal(fullstackDefaults.length, 1, 'Fullstack should have exactly one default template');
-  assert.equal(backendDefaults.length, 1, 'Backend should have exactly one default template');
+  assert.equal(backendDefaults.length, 1, 'Smartcontract should have exactly one default template');
 
   // Verify the correct default template for each category
   assert.equal(frontendDefaults[0].key, 'default-frontend', 'Frontend default should be default-frontend');
   assert.equal(fullstackDefaults[0].key, 'default', 'Fullstack default should be default');
-  assert.equal(backendDefaults[0].key, 'default-contracts', 'Backend default should be default-contracts');
+  assert.equal(backendDefaults[0].key, 'default-contracts', 'Smartcontract default should be default-contracts');
 
   console.log('✅ No duplicate defaults test passed!');
 }
@@ -95,7 +95,7 @@ async function testDefaultIndicationLogic() {
   ];
 
   for (const { type, expectedDefault } of projectTypes) {
-    const templates = getTemplatesByCategory(type as 'frontend' | 'fullstack' | 'backend');
+    const templates = getTemplatesByCategory(type as 'frontend' | 'fullstack' | 'smartcontract');
 
     for (const template of templates) {
       // Apply the new default indication logic from init.ts
@@ -150,10 +150,10 @@ async function testTemplateDescriptions() {
 async function testNoCrossCategoryContamination() {
   console.log('🚫 Testing no cross-category contamination...');
 
-  const allCategories = ['frontend', 'fullstack', 'backend'];
+  const allCategories = ['frontend', 'fullstack', 'smartcontract'];
 
   for (const category of allCategories) {
-    const templates = getTemplatesByCategory(category as 'frontend' | 'fullstack' | 'backend');
+    const templates = getTemplatesByCategory(category as 'frontend' | 'fullstack' | 'smartcontract');
 
     for (const template of templates) {
       assert.equal(template.category, category,
@@ -164,7 +164,7 @@ async function testNoCrossCategoryContamination() {
   // Verify categories are mutually exclusive
   const frontendKeys = getTemplatesByCategory('frontend').map(t => t.key);
   const fullstackKeys = getTemplatesByCategory('fullstack').map(t => t.key);
-  const backendKeys = getTemplatesByCategory('backend').map(t => t.key);
+  const backendKeys = getTemplatesByCategory('smartcontract').map(t => t.key);
 
   // Check no overlap between categories
   const frontendFullstackOverlap = frontendKeys.filter(key => fullstackKeys.includes(key));
@@ -197,8 +197,8 @@ async function testTemplateSelectionFlow() {
       availableTemplates = getTemplatesByCategory('frontend');
       expectedCategory = 'frontend';
     } else if (projectType === 'backend') {
-      availableTemplates = getTemplatesByCategory('backend');
-      expectedCategory = 'backend';
+      availableTemplates = getTemplatesByCategory('smartcontract');
+      expectedCategory = 'smartcontract';
     } else if (projectType === 'fullstack') {
       availableTemplates = getTemplatesByCategory('fullstack');
       expectedCategory = 'fullstack';

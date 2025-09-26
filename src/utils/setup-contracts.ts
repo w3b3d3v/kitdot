@@ -1,6 +1,7 @@
 import fs from 'fs-extra';
 import path from 'path';
 import { ProjectConfig } from '../types.js';
+import { resolveTemplatePath } from './sdk-paths.js';
 
 export async function setupContracts(config: ProjectConfig): Promise<void> {
   // Always use default contracts template (backend at root, fullstack in subdirectory)
@@ -8,7 +9,7 @@ export async function setupContracts(config: ProjectConfig): Promise<void> {
 }
 
 async function setupDefaultContracts(config: ProjectConfig): Promise<void> {
-  const defaultContractsPath = path.join(process.cwd(), 'templates/default/contracts');
+  const defaultContractsPath = await resolveTemplatePath('templates/default/contracts');
 
   // For backend-only projects, copy directly to root folder
   const targetDir = config.type === 'backend' ? config.directory : path.join(config.directory, 'contracts');
@@ -39,7 +40,7 @@ async function setupDefaultContracts(config: ProjectConfig): Promise<void> {
 
 async function copyAgentsFile(projectRootPath: string): Promise<void> {
   try {
-    const agentsSourcePath = path.join(process.cwd(), 'templates/llms/AGENTS.md');
+    const agentsSourcePath = await resolveTemplatePath('templates/llms/AGENTS.md');
     const agentsTargetPath = path.join(projectRootPath, 'AGENTS.md');
 
     // Check if source file exists
