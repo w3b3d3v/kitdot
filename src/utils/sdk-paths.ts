@@ -1,34 +1,33 @@
 // src/sdk-paths.ts
+import fs from "fs";
 import path from "path";
 import { fileURLToPath } from "url";
-import { promises as fs } from "fs";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-/**
- * Resolve a template path relative to this package.
- */
-export function resolveTemplatePath(templatePath: string): string {
-  return path.join(__dirname, "..", "templates", templatePath);
-}
-
-/**
- * Get the templates directory inside this package.
- */
-export function getTemplatesDirectory(): string {
-  return path.join(__dirname, "..", "templates");
-}
-
-/**
- * Check if a template exists inside the package.
- */
-export async function templateExists(templatePath: string): Promise<boolean> {
-  const full = resolveTemplatePath(templatePath);
-  try {
-    await fs.access(full);
-    return true;
-  } catch {
-    return false;
+function findTemplatesDir(maxUp = 5): string {
+  let dir = __dirname;
+  for (let i = 0; i <= maxUp; i++) {
+    const candidate = path.join(dir, "templates");
+    if (fs.existsSync(candidate)) return candidate;
+    const parent = path.dirname(dir);
+    if (parent === dir) break;
+    dir = parent;
   }
+  throw new Error("templates folder not found (checked up from __dirname)");
+}
+
+export function resolveTemplatePath(templatePath: string): string {
+  const templatesDir = findTemplatesDir();
+  const rel = templatePath.replace(/^templates[\\/]+/, "");
+  return path.join(templatesDir, rel);
+}
+
+export function getTemplatesDirectory(): string {
+  return findTemplatesDir();
+}
+
+export function templateExists(templatePath: string): boolean {
+  return fs.existsSync(resolveTemplatePath(templatePath));
 }
