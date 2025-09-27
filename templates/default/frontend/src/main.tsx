@@ -1,21 +1,36 @@
-import { StrictMode } from "react";
-import { createRoot } from "react-dom/client";
-import { WagmiProvider } from "wagmi";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-
-import { config } from "./wagmi-config";
-
 import "./index.css";
-import App from "./App.tsx";
 
+import ReactDOM from "react-dom/client";
+// IMP START - Setup Web3Auth Provider
+import { Web3AuthProvider } from "@web3auth/modal/react";
+import web3AuthContextConfig from "./web3authContext";
+// IMP END - Setup Web3Auth Provider
+
+// IMP START - Setup Wagmi Provider
+import { WagmiProvider } from "@web3auth/modal/react/wagmi";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { wagmiConfig } from "./wagmi-config";
+
+// IMP END - Setup Wagmi Provider
+
+import App from "./App";
+
+// IMP START - Setup Wagmi Provider
 const queryClient = new QueryClient();
+// IMP END - Setup Wagmi Provider
 
-createRoot(document.getElementById("root")!).render(
-  <StrictMode>
-    <WagmiProvider config={config}>
-      <QueryClientProvider client={queryClient}>
+ReactDOM.createRoot(document.getElementById("root") as HTMLElement).render(
+  // IMP START - Setup Web3Auth Provider
+  <Web3AuthProvider config={web3AuthContextConfig}>
+    {/* // IMP END - Setup Web3Auth Provider */}
+    {/* // IMP START - Setup Wagmi Provider */}
+    <QueryClientProvider client={queryClient}>
+      <WagmiProvider config={wagmiConfig}>
         <App />
-      </QueryClientProvider>
-    </WagmiProvider>
-  </StrictMode>
+      </WagmiProvider>
+    </QueryClientProvider>
+    {/* // IMP END - Setup Wagmi Provider */}
+    {/* // IMP START - Setup Web3Auth Provider */}
+  </Web3AuthProvider>
+  // IMP END - Setup Web3Auth Provider
 );
