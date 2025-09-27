@@ -1,7 +1,7 @@
 import path from "path";
 import { ProjectConfig } from "../types.js";
 import { createTemplateLoader } from "./template-loader.js";
-import { getTemplate } from "../templates/registry.js";
+import { getTemplate } from "../templatesManager/registry.js";
 
 export async function setupFrontend(config: ProjectConfig): Promise<void> {
   // Ensure template is specified - no fallback
