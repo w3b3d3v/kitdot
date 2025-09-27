@@ -10,7 +10,7 @@ import fs from "fs-extra";
 import path from "path";
 
 // Import template registry directly from source
-import { TEMPLATE_REGISTRY } from "../src/templates/registry.js";
+import { TEMPLATE_REGISTRY } from "../src/templatesManager/registry.js";
 
 const TEST_TEMP_DIR = "/tmp/kitdot-template-validation";
 

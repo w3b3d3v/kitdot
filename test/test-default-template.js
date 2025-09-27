@@ -16,7 +16,9 @@ async function testDefaultTemplateIntegration() {
 
   try {
     // Test 1: Check if default template exists in registry
-    const { TEMPLATE_REGISTRY } = await import("../dist/templates/registry.js");
+    const { TEMPLATE_REGISTRY } = await import(
+      "../dist/templatesManager/registry.js"
+    );
 
     console.log("✅ Template registry loaded");
 
