@@ -3,7 +3,7 @@ import {
   getTemplatesByCategory,
   getTemplate,
   TEMPLATE_REGISTRY,
-} from "../src/templates/registry.js";
+} from "../src/templatesManager/registry.js";
 
 async function testTemplateRegistry() {
   console.log("📋 Testing template registry structure...");

@@ -1,6 +1,6 @@
 {
   "name": "kitdot",
-  "version": "0.2.2",
+  "version": "0.2.4",
   "description": "A TypeScript SDK toolkit for building Dapps on Polkadot Cloud",
   "main": "dist/index.js",
   "bin": {
@@ -53,5 +53,9 @@
   },
   "engines": {
     "node": ">=18.0.0"
-  }
+  },
+  "files": [
+    "dist",
+    "templates"
+  ]
 }

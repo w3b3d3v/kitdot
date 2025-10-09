@@ -12,7 +12,10 @@ import {
 import { createProjectStructure } from "../utils/project-structure.js";
 import { setupContracts } from "../utils/setup-contracts.js";
 import { setupFrontend } from "../utils/setup-frontend.js";
-import { getTemplate, getTemplatesForMode } from "../templates/registry.js";
+import {
+  getTemplate,
+  getTemplatesForMode,
+} from "../templatesManager/registry.js";
 import { displayHomeScreen } from "../utils/homeScreen.js";
 import { createTemplateLoader } from "../utils/template-loader.js";
 
@@ -177,9 +180,14 @@ async function gatherProjectInfo(
 
         if (selectedMode === "fullstack") {
           // Show type indicator for fullstack mode
-          const typeIndicator = template.category === "frontend" ? " (Frontend Only)" :
-                               template.category === "smartcontract" ? " (Smart Contracts Only)" :
-                               template.category === "fullstack" ? " (Full Stack)" : "";
+          const typeIndicator =
+            template.category === "frontend"
+              ? " (Frontend Only)"
+              : template.category === "smartcontract"
+              ? " (Smart Contracts Only)"
+              : template.category === "fullstack"
+              ? " (Full Stack)"
+              : "";
           displayName = `${template.framework} - ${template.description}${typeIndicator}`;
         } else {
           // For mode-specific selections, don't show type indicator since it's redundant
@@ -249,7 +257,11 @@ async function gatherProjectInfo(
         source: { type: "local", localPath: "templates/default/contracts" },
       };
       features = { contracts: true, frontend: true };
-      console.log(chalk.blue("🔗 Auto-pairing with default smart contracts for full-stack setup"));
+      console.log(
+        chalk.blue(
+          "🔗 Auto-pairing with default smart contracts for full-stack setup"
+        )
+      );
     } else if (templateCategory === "smartcontract") {
       // Smartcontract template selected → pair with default-frontend
       additionalTemplate = {
@@ -257,7 +269,9 @@ async function gatherProjectInfo(
         source: { type: "local", localPath: "templates/default/frontend" },
       };
       features = { contracts: true, frontend: true };
-      console.log(chalk.blue("🔗 Auto-pairing with default frontend for full-stack setup"));
+      console.log(
+        chalk.blue("🔗 Auto-pairing with default frontend for full-stack setup")
+      );
     } else {
       // Fullstack template selected → no pairing needed
       features = { contracts: true, frontend: true };

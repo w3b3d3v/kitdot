@@ -10,7 +10,7 @@ const program = new Command();
 program
   .name("kitdot")
   .description("A TypeScript SDK toolkit for building Dapps on Polkadot Cloud")
-  .version("0.1.0")
+  .version("0.2.4")
   .addHelpText(
     "after",
     "\nQuick Start:\n  kitdot install             Create new project (alias for init)\n  kitdot -y                  Create project with default template\n  kitdot init                Interactive project creation\n\nDevelopment Tools:\n  kitdot tools install-rust  Install Rust toolchain\n  kitdot tools check         Check tool status\n\n" +

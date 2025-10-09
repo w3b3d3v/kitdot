@@ -1,4 +1,33 @@
-.env
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+yarn.lock
 
-# Wagmi generated types
-src/generated.ts
+node_modules
+dist
+dist-ssr
+*.local
+
+# Editor directories and files
+.vscode/*
+!.vscode/extensions.json
+.idea
+.DS_Store
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# Test and session data
+tests/session-data/
+tests/browser-profile/
+tests/session-state.json
+test-results/
+playwright-report/
+playwright/.cache/
