@@ -36,12 +36,6 @@ jobs:
       - name: Run unit tests
         run: npm test
 
-      - name: Run CLI comprehensive tests
-        run: |
-          echo "⚠️  Skipping comprehensive CLI tests in CI due to stdin interaction issues"
-          echo "✅ These tests should be run manually before releases"
-          echo "   Command: npm run build && node test-cli-comprehensive.js"
-
   template-validation:
     runs-on: ubuntu-latest
     needs: test

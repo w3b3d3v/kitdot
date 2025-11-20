@@ -13,8 +13,8 @@
     "start": "node dist/cli.js",
     "lint": "eslint src/**/*.ts",
     "lint:fix": "eslint src/**/*.ts --fix",
-    "test": "jest",
-    "test:templates": "jest --testPathPattern=template-validation",
+    "test": "node --experimental-vm-modules node_modules/jest/bin/jest.js",
+    "test:templates": "node --experimental-vm-modules node_modules/jest/bin/jest.js --testPathPattern=template-validation",
     "prepublishOnly": "npm run build"
   },
   "keywords": [

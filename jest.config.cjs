@@ -14,8 +14,11 @@ module.exports = {
     '^.+\\.(ts|js)$': ['ts-jest', {
       useESM: true,
       tsconfig: {
+        module: 'ES2022',
         target: 'ES2022',
-        module: 'ESNext'
+        moduleResolution: 'node',
+        esModuleInterop: true,
+        resolveJsonModule: true
       }
     }]
   },
