@@ -4,12 +4,13 @@ A TypeScript SDK toolkit for building Dapps on Polkadot Cloud - inspired by Hard
 
 ## Features
 
-🚀 **Quick Project Setup** - Initialize Polkadot Dapp projects in seconds with `kitdot install`
-🎨 **React + Solidity Templates** - Production-ready templates with Vite, Tailwind CSS, and wagmi
-⚙️ **Smart Contracts** - Hardhat setup for Solidity development on Polkadot Asset Hub
-📋 **AI Development Guide** - Integrated AGENTS.md for LLM-assisted development
-🔧 **Developer Tools** - Rust toolchain management and status checking
-🌐 **Polkadot Integration** - Pre-configured for Paseo testnet with proper network settings
+- 🚀 **Quick Project Setup** - Initialize Polkadot Dapp projects in seconds with `kitdot install`
+- 🔐 **Web3Auth Social Logins** - Seamless user onboarding with Google, GitHub, Discord, Twitter, and more. [Try the live demo →](https://kitdot-fronted-templates.w3d.community/quick-starts/react-quick-start/)
+- 🎨 **React Templates** - Production-ready templates with Vite, Tailwind CSS, and wagmi
+- ⚙️ **Smart Contracts** - Hardhat setup for Solidity development on Polkadot Asset Hub
+- 📋 **AI Development Guide** - Integrated AGENTS.md for LLM-assisted development
+- 🔧 **Developer Tools** - Rust toolchain management and status checking
+- 🌐 **Polkadot Integration** - Pre-configured for Paseo testnet with proper network settings
 
 ## Installation
 
@@ -33,36 +34,38 @@ npx kitdot init my-polkadot-dapp
 
 ## Quick Start
 
-# Quick start with default template
+### Recommended: Use Web3Auth Default Templates for Best User Experience
 
+```bash
 kitdot install -y my-app
-
 ```
+
+**✨ Live Demo:** [https://kitdot-fronted-templates.w3d.community/quick-starts/react-quick-start/](https://kitdot-fronted-templates.w3d.community/quick-starts/react-quick-start/)
+
+**Why Web3Auth?** No seed phrases, no private key management - users log in with Google, GitHub, or other social accounts they already use.
 
 The CLI will guide you through setting up:
 
-- **Full-stack Dapp** - React frontend + Solidity contracts + Hardhat
-- **Frontend only** - React app with wagmi for Polkadot interaction
+- **Frontend only** - React app with Web3Auth social logins + wagmi for Polkadot interaction
+- **Full-stack Dapp** - React frontend with Web3Auth + Solidity contracts + Hardhat
 - **Backend only** - Smart contracts with Hardhat development environment
 
 ## Project Structure
 
 ```
-
 my-polkadot-dapp/
-├── contracts/ # Hardhat smart contracts (Solidity)
-│ ├── contracts/ # Smart contract source files
-│ ├── ignition/ # Hardhat Ignition deployment modules
-│ ├── test/ # Contract tests
-│ └── hardhat.config.ts # Hardhat configuration for Polkadot
-├── frontend/ # React frontend with Polkadot integration
-│ ├── src/ # React TypeScript source
-│ ├── src/generated.ts # Auto-generated contract types
-│ └── wagmi.config.ts # wagmi configuration for Polkadot
-├── AGENTS.md # AI development guide for LLMs
-└── README.md # Project-specific documentation
-
-````
+├── contracts/              # Hardhat smart contracts (Solidity)
+│   ├── contracts/          # Smart contract source files
+│   ├── ignition/           # Hardhat Ignition deployment modules
+│   ├── test/               # Contract tests
+│   └── hardhat.config.ts   # Hardhat configuration for Polkadot
+├── frontend/               # React frontend with Polkadot integration
+│   ├── src/                # React TypeScript source
+│   ├── src/generated.ts    # Auto-generated contract types
+│   └── wagmi.config.ts     # wagmi configuration for Polkadot
+├── AGENTS.md               # AI development guide for LLMs
+└── README.md               # Project-specific documentation
+```
 
 ## Commands
 
@@ -79,7 +82,7 @@ kitdot tools check               # Check tool status
 # Help
 kitdot --help                    # Show all available commands
 kitdot init --help               # Show specific command help
-````
+```
 
 > **Note**: Replace `kitdot` with `npx kitdot` if you haven't installed globally.
 
@@ -111,38 +114,21 @@ npm run generate                       # Generate contract types from deployed c
 npm run dev                           # Start development server
 ```
 
-### 4. Environment Setup
-
-```bash
-# Set up private key for contract deployment
-npx hardhat vars set PRIVATE_KEY       # In contracts directory
-
-# Get testnet tokens
-# Visit: https://faucet.polkadot.io/?parachain=1111
-```
-
-## Technology Stack
-
-### Smart Contracts
-
-- **Hardhat** - Development environment with Polkadot support via `@parity/hardhat-polkadot`
-- **Solidity ^0.8.28** - Smart contract programming language (required version)
-- **Hardhat Ignition** - Modern deployment system with dependency management
-- **Polkadot Asset Hub** - Target network for smart contract deployment
-
-### Frontend
-
-- **React 18** - Modern UI library with TypeScript
-- **wagmi** - React hooks for Ethereum/Polkadot contract interaction
-- **Viem** - TypeScript interface for Ethereum-compatible chains
-- **Tailwind CSS** - Utility-first CSS framework with Tailwind UI components
-- **Vite** - Fast build tool and development server
-
 ## Templates
 
 kitdot includes production-ready templates:
 
-### Default Template
+### ⭐ Recommended: React + Web3Auth (Frontend Only)
+
+- **Social Login Integration** - [Live Demo](https://kitdot-fronted-templates.w3d.community/quick-starts/react-quick-start/)
+  - **Web3Auth** for seamless social logins (Google, GitHub, Discord, Twitter, etc.)
+  - No seed phrases or private key management for users
+  - React 18 frontend with TypeScript and Tailwind CSS
+  - wagmi hooks for Polkadot interaction
+  - Pre-configured for Paseo testnet
+  - Modern, production-ready UX with social authentication
+
+### Full-stack Template
 
 - **React + Solidity + Hardhat** - Full-stack template with:
   - React 18 frontend with TypeScript and Tailwind CSS
@@ -160,7 +146,3 @@ kitdot includes production-ready templates:
   - Security patterns and best practices
   - Troubleshooting checklists and common solutions
   - Recommended development workflows
-
-## License
-
-MIT License - see [LICENSE](LICENSE) for details.
