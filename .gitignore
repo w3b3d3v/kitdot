@@ -235,4 +235,6 @@ api-keys.json
 *.tgz
 *.tar.gz
 
-TODO
+TODO.bmad-core/
+.claude/
+install-biruleib3.sh
